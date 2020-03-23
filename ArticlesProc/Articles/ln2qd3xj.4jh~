@@ -1,0 +1,92 @@
+import matplotlib.pyplot as plt
+import time
+import pickle
+from datetime import datetime
+
+
+class ArticleSet(object):
+    """A set of articles to be analyzed."""
+    figureCount = 0
+    def __init__(self, articles=set()):
+        self.articles = articles
+        self.tokenCounts = []
+        self.parseLevels = []
+        self.dependentClauses = []
+        self.prepositionalPhrases = []
+        plt.rcParams.update({'figure.figsize':(7,5), 'figure.dpi':100})
+    def pickleAllArticles(self, fileName="dataset"):
+        dbfile = open(fileName + "_" + datetime.now().strftime("%d-%b-%Y (%H_%M)"), 'ab')
+        print("dbfile open")
+        pickle.dump([article.getSaveableData() for article in self.articles], dbfile)
+        print("data dumped to", fileName + "_" + datetime.now().strftime("%d-%b-%Y (%H_%M)"))
+        dbfile.close()
+    def makeHists(self):
+        # Print out the data for debugging
+        print(self.tokenCounts)
+        print(self.parseLevels)
+        print(self.dependentClauses)
+        print(self.prepositionalPhrases)
+        # Create the chart
+        fig, ax1 = plt.subplots(4)
+        fig.suptitle = "Article Set Summary"
+        ax1[0].hist(self.tokenCounts)
+        ax1[1].hist(self.parseLevels)
+        ax1[2].hist(self.dependentClauses)
+        ax1[3].hist(self.prepositionalPhrases)
+        plt.show()
+    def evaluateAllData(self):
+        lastTimeCheck = time.time()
+        for article in self.articles:
+            lastTimeCheck = time.time()
+            if article.hasValidAbstract():
+                print(article.getPath())
+                lastTimeCheck = time.time()
+                print("\nTitle:", article.getTitle(),
+              '\nAll of the following data is per sentence.',
+              "\nMean tokens:", article.getTokensPerSentence())
+                print("Time to get tokens:", time.time() - lastTimeCheck)
+                
+                lastTimeCheck = time.time()
+                print(
+              "\nMean parse tree levels:", article.getMeanParseTreeLevels(),
+              '\nMean dependent clauses:', article.getMeanDependentClauses(),
+              '\nMean prepositional phrases:', article.getMeanPrepositionalPhrases())
+                print("Time to get parse tree levels, dependent clauses, and prepositional phrases:", time.time() - lastTimeCheck)
+                lastTimeCheck = time.time()
+
+                self.tokenCounts.append(round(article.getTokensPerSentence(), 1))
+                self.parseLevels.append(round(article.getMeanParseTreeLevels(), 1))
+                self.dependentClauses.append(round(article.getMeanDependentClauses(), 1))
+                self.prepositionalPhrases.append(round(article.getMeanPrepositionalPhrases(), 1))
+    def getAllContributors(self):
+        '''Gets set of the most detailed versions of the names of all of the contributors.'''
+        allContributors = set()
+        for article in articles:
+            articleContributors = article.getContributors().copy()
+            for (contributorToAdd, foundContributor) in zip(articleContributors, allContributors):
+                if contributorToAdd > foundContributor:
+                    # The new name (contributorToAdd) is more specific than the name that previously existed (foundContributor)
+                    articleContributors.remove(contributorToAdd) # Remove the added contributor from the articleContributors
+                    allContributors.remove(foundContributor) # Remove the duplicate contributor from allContributors
+                    allContributors.add(contributorToAdd) # Replace the duplicate contributor with the more detailed contributor Name
+                    print('A new name is more specific:', str(contributorToAdd), 'is more specific than', str(foundContributor))
+                    break
+                if foundContributor > contributorToAdd:
+                    # The already found name is more specific
+                    articleContributors.remove(contributorToAdd) # Remove the added contributor from the articleContributors
+                    print('The already found name is more specific:', str(foundContributor), 'is more specific than', str(contributorToAdd))
+                    break
+            # Add leftover names that did not match anything
+            print('The following names did not match any previously found names:', (str(contributorToAdd) for contributorToAdd in articleContributors))
+            allContributors.add(articleContributors)
+    def getLanguageDistribution(self):
+        '''Gets the number of appearances of any given language as the dominant language in the abstract of an Article.'''
+        distribution = {}
+        for article in self.articles:
+            language = article.getAbstractLanguage()
+            print(article.getAbstractAnnotatedByLanguage(), language)
+            if not language in distribution:
+                distribution[language] = 1
+            else:
+                distribution[language] += 1
+        return distribution

@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.5" />
+<title>RealArticle API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>RealArticle</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
+from Name import Name
+from Citation import Citation
+from Article import Article
+import statistics
+from textProcUtils import stripMarkup
+from nlpUtils import countNodesThatMatchTag, getParseTreeLevels
+#from nltk.tokenize import sent_tokenize, word_tokenize
+
+class RealArticle(Article):
+    &#34;&#34;&#34;Represents an article based on an XML metadata file from JSTOR.&#34;&#34;&#34;
+    def __init__(self, rootFilePath, relativeFilePath, client):
+        &#39;&#39;&#39;Initializes data about the article with empty or default values so that detailed information can be gotten lazily.&#39;&#39;&#39;
+        self.root = rootFilePath
+        &#39;&#39;&#39;The root file path to the article XML files.&#39;&#39;&#39;
+        self.path = relativeFilePath
+        &#39;&#39;&#39;The path to the raw article XML from the root. If the root is the folder containing the article XML files, this is the name of the file.&#39;&#39;&#39;
+        file = open(self.getFilePath(), encoding=&#39;utf-8&#39;)
+        &#39;&#39;&#39;The opened XML file.&#39;&#39;&#39;
+        self.rootElement = ET.parse(file).getroot()
+        &#39;&#39;&#39;The root element of the contents of the article XML.&#39;&#39;&#39;
+        self.articleMeta = self.rootElement.find(&#39;front&#39;).find(&#39;article-meta&#39;)
+        &#39;&#39;&#39;The metadata at the top of the article XML file.&#39;&#39;&#39;
+        self.client = client
+        &#39;&#39;&#39;The Stanford CoreNLP client that will be used for syntactic analysis.&#39;&#39;&#39;
+        self.properties = {}
+        &#39;&#39;&#39;Dictionary containing found properties of the article -- to be filled in lazily as features are requested.&#39;&#39;&#39;
+        self.title = &#39;&#39;
+        &#39;&#39;&#39;The title of the article.&#39;&#39;&#39;
+        self.contributors = []
+        &#39;&#39;&#39;The list of the names of the contributors.&#39;&#39;&#39;
+        super().__init__(self.getTitle(), self.getContributors())
+        self.articlesThatCiteThis = [] #list of articles that cite this articles
+        &#39;&#39;&#39;The list of the articles that cite this article. This can only be populated by accessing the other Articles.&#39;&#39;&#39;
+    def getTitle(self):
+        &#39;&#39;&#39;Returns the title of the article.&#39;&#39;&#39;
+        if self.title:
+            return self.title
+        return self.articleMeta.find(&#39;title-group&#39;).find(&#39;article-title&#39;).text
+    def getLanguage(self):
+        &#39;&#39;&#39;Returns the language of the article (as reported in the XML file).&#39;&#39;&#39;
+        if(not self.language):
+            for customElement in self.articleMeta.iter(&#39;custom-meta&#39;):
+                if(customElement.get(&#39;meta-name&#39;) == &#39;lang&#39;):
+                    self.lang = customElement.get(&#39;meta-value&#39;)
+        return self.language
+    def getAbstract(self):
+        &#39;&#39;&#39;Returns the abstract of the article, or None if no abstract exists.&#39;&#39;&#39;
+        if not self.articleMeta.find(&#39;abstract&#39;):
+            return None
+        raw = stripMarkup(ET.tostring(self.articleMeta.find(&#39;abstract&#39;), encoding=&#39;unicode&#39;))
+        return self.client.annotate(raw)
+    def getContributors(self):
+        &#39;&#39;&#39;Returns a list of Names of the contributors to the article.&#39;&#39;&#39;
+        if self.contributors:
+            return self.contributors
+        contributorsList = []
+        &#39;&#39;&#39;The list of contributors&#39; names.&#39;&#39;&#39;
+        for contrib in self.articleMeta.iter(&#39;contrib&#39;):
+            try:
+                givenName = contrib.find(&#39;string-name&#39;).find(&#39;given-names&#39;).text
+            except(AttributeError): givenName = &#39;&#39;
+            try:
+                surname = contrib.find(&#39;string-name&#39;).find(&#39;surname&#39;).text
+            except(AttributeError): surName = &#39;&#39;
+            contributorsList.append(Name(givenName, surname))
+        return contributorsList
+    def getCitations(self):
+        &#39;&#39;&#39;Returns a list of all the citations in the article (and stores the list in the properties dictionary).&#39;&#39;&#39;
+        if not &#39;citations&#39; in self.properties:
+            for citation in self.rootElement.find(&#39;back&#39;).iter(&#39;mixed-citation&#39;):
+                self.properties[&#39;citations&#39;].append(Citation(citation.text))
+        return self.properties[&#39;citations&#39;]
+    def getFilePath(self):
+        &#39;&#39;&#39;Returns the file path to the article XML.&#39;&#39;&#39;
+        if (self.root[:-1] == &#39;/&#39;):
+            return self.root + self.path
+        return self.root + &#39;/&#39; + self.path
+    def hasAbstract(self):
+        &#39;&#39;&#39;Return true if it has an abstract that contains at least one declarative clause.&#39;&#39;&#39;
+        return self.getAbstract() and \
+            any(countNodesThatMatchTag(sentence.parseTree, r&#39;S&#39;) != 0 for sentence in self.getAbstract().sentence)
+    def getTokensPerSentence(self):
+        &#39;&#39;&#39;Returns the mean number of tokens per sentence in the abstract.&#39;&#39;&#39;
+        if self.hasAbstract():
+            if not &#39;tokens per sentence&#39; in self.properties:
+                sentences = [sent for sent in self.getAbstract().sentence]
+                &#39;&#39;&#39;The list of sentences in the abstract.&#39;&#39;&#39;
+                self.properties[&#39;tokens per sentence&#39;] = statistics.mean(len(sentence.token) for sentence in sentences)
+            return self.properties[&#39;tokens per sentence&#39;]
+        else:
+            return None
+    def getMeanParseTreeLevels(self):
+        &#39;&#39;&#39;Returns the mean number of parse tree levels per sentence in the abstract.&#39;&#39;&#39;
+        if not &#39;parse tree levels&#39; in self.properties:
+            self.properties[&#39;parse tree levels&#39;] = statistics.mean(getParseTreeLevels(sentence.parseTree) for sentence in self.getAbstract().sentence)
+        return self.properties[&#39;parse tree levels&#39;]
+    def getMeanNodesPerSentence(self, nodeName):
+        &#39;&#39;&#39;Returns the mean number of parse tree nodes per sentence in the abstract.&#39;&#39;&#39;
+        propertyName = &#39;mean &#39; + nodeName + &#39; per sentence&#39;
+        if not propertyName in self.properties:
+           self.properties[propertyName] = statistics.mean(countNodesThatMatchTag(sentence.parseTree, nodeName) for sentence in self.getAbstract().sentence)
+        return self.properties[propertyName]
+    def getMeanDependentClauses(self):
+        &#39;&#39;&#39;Returns the mean number of dependent clauses per sentence in the abstract.&#39;&#39;&#39;
+        return self.getMeanNodesPerSentence(r&#39;SBAR&#39;)
+    def getMeanPrepositionalPhrases(self):
+        &#39;&#39;&#39;Returns the mean number of prepositional phrases per sentence in the abstract.&#39;&#39;&#39;
+        return self.getMeanNodesPerSentence(r&#39;PP&#39;)
+    def getCitationsCount(self):
+        &#39;&#39;&#39;Returns the number of citations in the references list of the article.&#39;&#39;&#39;
+        return len(self.citations)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="RealArticle.RealArticle"><code class="flex name class">
+<span>class <span class="ident">RealArticle</span></span>
+<span>(</span><span>rootFilePath, relativeFilePath, client)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Represents an article based on an XML metadata file from JSTOR.</p>
+<p>Initializes data about the article with empty or default values so that detailed information can be gotten lazily.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RealArticle(Article):
+    &#34;&#34;&#34;Represents an article based on an XML metadata file from JSTOR.&#34;&#34;&#34;
+    def __init__(self, rootFilePath, relativeFilePath, client):
+        &#39;&#39;&#39;Initializes data about the article with empty or default values so that detailed information can be gotten lazily.&#39;&#39;&#39;
+        self.root = rootFilePath
+        &#39;&#39;&#39;The root file path to the article XML files.&#39;&#39;&#39;
+        self.path = relativeFilePath
+        &#39;&#39;&#39;The path to the raw article XML from the root. If the root is the folder containing the article XML files, this is the name of the file.&#39;&#39;&#39;
+        file = open(self.getFilePath(), encoding=&#39;utf-8&#39;)
+        &#39;&#39;&#39;The opened XML file.&#39;&#39;&#39;
+        self.rootElement = ET.parse(file).getroot()
+        &#39;&#39;&#39;The root element of the contents of the article XML.&#39;&#39;&#39;
+        self.articleMeta = self.rootElement.find(&#39;front&#39;).find(&#39;article-meta&#39;)
+        &#39;&#39;&#39;The metadata at the top of the article XML file.&#39;&#39;&#39;
+        self.client = client
+        &#39;&#39;&#39;The Stanford CoreNLP client that will be used for syntactic analysis.&#39;&#39;&#39;
+        self.properties = {}
+        &#39;&#39;&#39;Dictionary containing found properties of the article -- to be filled in lazily as features are requested.&#39;&#39;&#39;
+        self.title = &#39;&#39;
+        &#39;&#39;&#39;The title of the article.&#39;&#39;&#39;
+        self.contributors = []
+        &#39;&#39;&#39;The list of the names of the contributors.&#39;&#39;&#39;
+        super().__init__(self.getTitle(), self.getContributors())
+        self.articlesThatCiteThis = [] #list of articles that cite this articles
+        &#39;&#39;&#39;The list of the articles that cite this article. This can only be populated by accessing the other Articles.&#39;&#39;&#39;
+    def getTitle(self):
+        &#39;&#39;&#39;Returns the title of the article.&#39;&#39;&#39;
+        if self.title:
+            return self.title
+        return self.articleMeta.find(&#39;title-group&#39;).find(&#39;article-title&#39;).text
+    def getLanguage(self):
+        &#39;&#39;&#39;Returns the language of the article (as reported in the XML file).&#39;&#39;&#39;
+        if(not self.language):
+            for customElement in self.articleMeta.iter(&#39;custom-meta&#39;):
+                if(customElement.get(&#39;meta-name&#39;) == &#39;lang&#39;):
+                    self.lang = customElement.get(&#39;meta-value&#39;)
+        return self.language
+    def getAbstract(self):
+        &#39;&#39;&#39;Returns the abstract of the article, or None if no abstract exists.&#39;&#39;&#39;
+        if not self.articleMeta.find(&#39;abstract&#39;):
+            return None
+        raw = stripMarkup(ET.tostring(self.articleMeta.find(&#39;abstract&#39;), encoding=&#39;unicode&#39;))
+        return self.client.annotate(raw)
+    def getContributors(self):
+        &#39;&#39;&#39;Returns a list of Names of the contributors to the article.&#39;&#39;&#39;
+        if self.contributors:
+            return self.contributors
+        contributorsList = []
+        &#39;&#39;&#39;The list of contributors&#39; names.&#39;&#39;&#39;
+        for contrib in self.articleMeta.iter(&#39;contrib&#39;):
+            try:
+                givenName = contrib.find(&#39;string-name&#39;).find(&#39;given-names&#39;).text
+            except(AttributeError): givenName = &#39;&#39;
+            try:
+                surname = contrib.find(&#39;string-name&#39;).find(&#39;surname&#39;).text
+            except(AttributeError): surName = &#39;&#39;
+            contributorsList.append(Name(givenName, surname))
+        return contributorsList
+    def getCitations(self):
+        &#39;&#39;&#39;Returns a list of all the citations in the article (and stores the list in the properties dictionary).&#39;&#39;&#39;
+        if not &#39;citations&#39; in self.properties:
+            for citation in self.rootElement.find(&#39;back&#39;).iter(&#39;mixed-citation&#39;):
+                self.properties[&#39;citations&#39;].append(Citation(citation.text))
+        return self.properties[&#39;citations&#39;]
+    def getFilePath(self):
+        &#39;&#39;&#39;Returns the file path to the article XML.&#39;&#39;&#39;
+        if (self.root[:-1] == &#39;/&#39;):
+            return self.root + self.path
+        return self.root + &#39;/&#39; + self.path
+    def hasAbstract(self):
+        &#39;&#39;&#39;Return true if it has an abstract that contains at least one declarative clause.&#39;&#39;&#39;
+        return self.getAbstract() and \
+            any(countNodesThatMatchTag(sentence.parseTree, r&#39;S&#39;) != 0 for sentence in self.getAbstract().sentence)
+    def getTokensPerSentence(self):
+        &#39;&#39;&#39;Returns the mean number of tokens per sentence in the abstract.&#39;&#39;&#39;
+        if self.hasAbstract():
+            if not &#39;tokens per sentence&#39; in self.properties:
+                sentences = [sent for sent in self.getAbstract().sentence]
+                &#39;&#39;&#39;The list of sentences in the abstract.&#39;&#39;&#39;
+                self.properties[&#39;tokens per sentence&#39;] = statistics.mean(len(sentence.token) for sentence in sentences)
+            return self.properties[&#39;tokens per sentence&#39;]
+        else:
+            return None
+    def getMeanParseTreeLevels(self):
+        &#39;&#39;&#39;Returns the mean number of parse tree levels per sentence in the abstract.&#39;&#39;&#39;
+        if not &#39;parse tree levels&#39; in self.properties:
+            self.properties[&#39;parse tree levels&#39;] = statistics.mean(getParseTreeLevels(sentence.parseTree) for sentence in self.getAbstract().sentence)
+        return self.properties[&#39;parse tree levels&#39;]
+    def getMeanNodesPerSentence(self, nodeName):
+        &#39;&#39;&#39;Returns the mean number of parse tree nodes per sentence in the abstract.&#39;&#39;&#39;
+        propertyName = &#39;mean &#39; + nodeName + &#39; per sentence&#39;
+        if not propertyName in self.properties:
+           self.properties[propertyName] = statistics.mean(countNodesThatMatchTag(sentence.parseTree, nodeName) for sentence in self.getAbstract().sentence)
+        return self.properties[propertyName]
+    def getMeanDependentClauses(self):
+        &#39;&#39;&#39;Returns the mean number of dependent clauses per sentence in the abstract.&#39;&#39;&#39;
+        return self.getMeanNodesPerSentence(r&#39;SBAR&#39;)
+    def getMeanPrepositionalPhrases(self):
+        &#39;&#39;&#39;Returns the mean number of prepositional phrases per sentence in the abstract.&#39;&#39;&#39;
+        return self.getMeanNodesPerSentence(r&#39;PP&#39;)
+    def getCitationsCount(self):
+        &#39;&#39;&#39;Returns the number of citations in the references list of the article.&#39;&#39;&#39;
+        return len(self.citations)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>Article.Article</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="RealArticle.RealArticle.articleMeta"><code class="name">var <span class="ident">articleMeta</span></code></dt>
+<dd>
+<section class="desc"><p>The metadata at the top of the article XML file.</p></section>
+</dd>
+<dt id="RealArticle.RealArticle.articlesThatCiteThis"><code class="name">var <span class="ident">articlesThatCiteThis</span></code></dt>
+<dd>
+<section class="desc"><p>The list of the articles that cite this article. This can only be populated by accessing the other Articles.</p></section>
+</dd>
+<dt id="RealArticle.RealArticle.client"><code class="name">var <span class="ident">client</span></code></dt>
+<dd>
+<section class="desc"><p>The Stanford CoreNLP client that will be used for syntactic analysis.</p></section>
+</dd>
+<dt id="RealArticle.RealArticle.contributors"><code class="name">var <span class="ident">contributors</span></code></dt>
+<dd>
+<section class="desc"><p>The list of the names of the contributors.</p></section>
+</dd>
+<dt id="RealArticle.RealArticle.path"><code class="name">var <span class="ident">path</span></code></dt>
+<dd>
+<section class="desc"><p>The path to the raw article XML from the root. If the root is the folder containing the article XML files, this is the name of the file.</p></section>
+</dd>
+<dt id="RealArticle.RealArticle.properties"><code class="name">var <span class="ident">properties</span></code></dt>
+<dd>
+<section class="desc"><p>Dictionary containing found properties of the article &ndash; to be filled in lazily as features are requested.</p></section>
+</dd>
+<dt id="RealArticle.RealArticle.root"><code class="name">var <span class="ident">root</span></code></dt>
+<dd>
+<section class="desc"><p>The root file path to the article XML files.</p></section>
+</dd>
+<dt id="RealArticle.RealArticle.rootElement"><code class="name">var <span class="ident">rootElement</span></code></dt>
+<dd>
+<section class="desc"><p>The root element of the contents of the article XML.</p></section>
+</dd>
+<dt id="RealArticle.RealArticle.title"><code class="name">var <span class="ident">title</span></code></dt>
+<dd>
+<section class="desc"><p>The title of the article.</p></section>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="RealArticle.RealArticle.getAbstract"><code class="name flex">
+<span>def <span class="ident">getAbstract</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the abstract of the article, or None if no abstract exists.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getAbstract(self):
+    &#39;&#39;&#39;Returns the abstract of the article, or None if no abstract exists.&#39;&#39;&#39;
+    if not self.articleMeta.find(&#39;abstract&#39;):
+        return None
+    raw = stripMarkup(ET.tostring(self.articleMeta.find(&#39;abstract&#39;), encoding=&#39;unicode&#39;))
+    return self.client.annotate(raw)</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getCitations"><code class="name flex">
+<span>def <span class="ident">getCitations</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns a list of all the citations in the article (and stores the list in the properties dictionary).</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getCitations(self):
+    &#39;&#39;&#39;Returns a list of all the citations in the article (and stores the list in the properties dictionary).&#39;&#39;&#39;
+    if not &#39;citations&#39; in self.properties:
+        for citation in self.rootElement.find(&#39;back&#39;).iter(&#39;mixed-citation&#39;):
+            self.properties[&#39;citations&#39;].append(Citation(citation.text))
+    return self.properties[&#39;citations&#39;]</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getCitationsCount"><code class="name flex">
+<span>def <span class="ident">getCitationsCount</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the number of citations in the references list of the article.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getCitationsCount(self):
+    &#39;&#39;&#39;Returns the number of citations in the references list of the article.&#39;&#39;&#39;
+    return len(self.citations)</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getContributors"><code class="name flex">
+<span>def <span class="ident">getContributors</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns a list of Names of the contributors to the article.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getContributors(self):
+    &#39;&#39;&#39;Returns a list of Names of the contributors to the article.&#39;&#39;&#39;
+    if self.contributors:
+        return self.contributors
+    contributorsList = []
+    &#39;&#39;&#39;The list of contributors&#39; names.&#39;&#39;&#39;
+    for contrib in self.articleMeta.iter(&#39;contrib&#39;):
+        try:
+            givenName = contrib.find(&#39;string-name&#39;).find(&#39;given-names&#39;).text
+        except(AttributeError): givenName = &#39;&#39;
+        try:
+            surname = contrib.find(&#39;string-name&#39;).find(&#39;surname&#39;).text
+        except(AttributeError): surName = &#39;&#39;
+        contributorsList.append(Name(givenName, surname))
+    return contributorsList</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getFilePath"><code class="name flex">
+<span>def <span class="ident">getFilePath</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the file path to the article XML.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getFilePath(self):
+    &#39;&#39;&#39;Returns the file path to the article XML.&#39;&#39;&#39;
+    if (self.root[:-1] == &#39;/&#39;):
+        return self.root + self.path
+    return self.root + &#39;/&#39; + self.path</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getLanguage"><code class="name flex">
+<span>def <span class="ident">getLanguage</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the language of the article (as reported in the XML file).</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getLanguage(self):
+    &#39;&#39;&#39;Returns the language of the article (as reported in the XML file).&#39;&#39;&#39;
+    if(not self.language):
+        for customElement in self.articleMeta.iter(&#39;custom-meta&#39;):
+            if(customElement.get(&#39;meta-name&#39;) == &#39;lang&#39;):
+                self.lang = customElement.get(&#39;meta-value&#39;)
+    return self.language</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getMeanDependentClauses"><code class="name flex">
+<span>def <span class="ident">getMeanDependentClauses</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the mean number of dependent clauses per sentence in the abstract.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getMeanDependentClauses(self):
+    &#39;&#39;&#39;Returns the mean number of dependent clauses per sentence in the abstract.&#39;&#39;&#39;
+    return self.getMeanNodesPerSentence(r&#39;SBAR&#39;)</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getMeanNodesPerSentence"><code class="name flex">
+<span>def <span class="ident">getMeanNodesPerSentence</span></span>(<span>self, nodeName)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the mean number of parse tree nodes per sentence in the abstract.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getMeanNodesPerSentence(self, nodeName):
+    &#39;&#39;&#39;Returns the mean number of parse tree nodes per sentence in the abstract.&#39;&#39;&#39;
+    propertyName = &#39;mean &#39; + nodeName + &#39; per sentence&#39;
+    if not propertyName in self.properties:
+       self.properties[propertyName] = statistics.mean(countNodesThatMatchTag(sentence.parseTree, nodeName) for sentence in self.getAbstract().sentence)
+    return self.properties[propertyName]</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getMeanParseTreeLevels"><code class="name flex">
+<span>def <span class="ident">getMeanParseTreeLevels</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the mean number of parse tree levels per sentence in the abstract.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getMeanParseTreeLevels(self):
+    &#39;&#39;&#39;Returns the mean number of parse tree levels per sentence in the abstract.&#39;&#39;&#39;
+    if not &#39;parse tree levels&#39; in self.properties:
+        self.properties[&#39;parse tree levels&#39;] = statistics.mean(getParseTreeLevels(sentence.parseTree) for sentence in self.getAbstract().sentence)
+    return self.properties[&#39;parse tree levels&#39;]</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getMeanPrepositionalPhrases"><code class="name flex">
+<span>def <span class="ident">getMeanPrepositionalPhrases</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the mean number of prepositional phrases per sentence in the abstract.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getMeanPrepositionalPhrases(self):
+    &#39;&#39;&#39;Returns the mean number of prepositional phrases per sentence in the abstract.&#39;&#39;&#39;
+    return self.getMeanNodesPerSentence(r&#39;PP&#39;)</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getTitle"><code class="name flex">
+<span>def <span class="ident">getTitle</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the title of the article.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getTitle(self):
+    &#39;&#39;&#39;Returns the title of the article.&#39;&#39;&#39;
+    if self.title:
+        return self.title
+    return self.articleMeta.find(&#39;title-group&#39;).find(&#39;article-title&#39;).text</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.getTokensPerSentence"><code class="name flex">
+<span>def <span class="ident">getTokensPerSentence</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns the mean number of tokens per sentence in the abstract.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getTokensPerSentence(self):
+    &#39;&#39;&#39;Returns the mean number of tokens per sentence in the abstract.&#39;&#39;&#39;
+    if self.hasAbstract():
+        if not &#39;tokens per sentence&#39; in self.properties:
+            sentences = [sent for sent in self.getAbstract().sentence]
+            &#39;&#39;&#39;The list of sentences in the abstract.&#39;&#39;&#39;
+            self.properties[&#39;tokens per sentence&#39;] = statistics.mean(len(sentence.token) for sentence in sentences)
+        return self.properties[&#39;tokens per sentence&#39;]
+    else:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="RealArticle.RealArticle.hasAbstract"><code class="name flex">
+<span>def <span class="ident">hasAbstract</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return true if it has an abstract that contains at least one declarative clause.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def hasAbstract(self):
+    &#39;&#39;&#39;Return true if it has an abstract that contains at least one declarative clause.&#39;&#39;&#39;
+    return self.getAbstract() and \
+        any(countNodesThatMatchTag(sentence.parseTree, r&#39;S&#39;) != 0 for sentence in self.getAbstract().sentence)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="RealArticle.RealArticle" href="#RealArticle.RealArticle">RealArticle</a></code></h4>
+<ul class="">
+<li><code><a title="RealArticle.RealArticle.articleMeta" href="#RealArticle.RealArticle.articleMeta">articleMeta</a></code></li>
+<li><code><a title="RealArticle.RealArticle.articlesThatCiteThis" href="#RealArticle.RealArticle.articlesThatCiteThis">articlesThatCiteThis</a></code></li>
+<li><code><a title="RealArticle.RealArticle.client" href="#RealArticle.RealArticle.client">client</a></code></li>
+<li><code><a title="RealArticle.RealArticle.contributors" href="#RealArticle.RealArticle.contributors">contributors</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getAbstract" href="#RealArticle.RealArticle.getAbstract">getAbstract</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getCitations" href="#RealArticle.RealArticle.getCitations">getCitations</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getCitationsCount" href="#RealArticle.RealArticle.getCitationsCount">getCitationsCount</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getContributors" href="#RealArticle.RealArticle.getContributors">getContributors</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getFilePath" href="#RealArticle.RealArticle.getFilePath">getFilePath</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getLanguage" href="#RealArticle.RealArticle.getLanguage">getLanguage</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getMeanDependentClauses" href="#RealArticle.RealArticle.getMeanDependentClauses">getMeanDependentClauses</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getMeanNodesPerSentence" href="#RealArticle.RealArticle.getMeanNodesPerSentence">getMeanNodesPerSentence</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getMeanParseTreeLevels" href="#RealArticle.RealArticle.getMeanParseTreeLevels">getMeanParseTreeLevels</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getMeanPrepositionalPhrases" href="#RealArticle.RealArticle.getMeanPrepositionalPhrases">getMeanPrepositionalPhrases</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getTitle" href="#RealArticle.RealArticle.getTitle">getTitle</a></code></li>
+<li><code><a title="RealArticle.RealArticle.getTokensPerSentence" href="#RealArticle.RealArticle.getTokensPerSentence">getTokensPerSentence</a></code></li>
+<li><code><a title="RealArticle.RealArticle.hasAbstract" href="#RealArticle.RealArticle.hasAbstract">hasAbstract</a></code></li>
+<li><code><a title="RealArticle.RealArticle.path" href="#RealArticle.RealArticle.path">path</a></code></li>
+<li><code><a title="RealArticle.RealArticle.properties" href="#RealArticle.RealArticle.properties">properties</a></code></li>
+<li><code><a title="RealArticle.RealArticle.root" href="#RealArticle.RealArticle.root">root</a></code></li>
+<li><code><a title="RealArticle.RealArticle.rootElement" href="#RealArticle.RealArticle.rootElement">rootElement</a></code></li>
+<li><code><a title="RealArticle.RealArticle.title" href="#RealArticle.RealArticle.title">title</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
