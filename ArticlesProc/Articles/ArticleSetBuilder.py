@@ -9,13 +9,13 @@ from Articles.ArticleSet import ArticleSet
 def getSummaryFromPickle(fileName, client):
     '''Simple out-of-box function that uses the ArticleSetBuilder to show data from a pickle.'''
     articles = ArticleSetBuilder(client).retrieveArticlesFromPickle(fileName).getArticles()
-    articleSet = ArticleSet(articles=articles)
-    articleSet.getData(verbose=False)
+    articleSet = ArticleSet(articles)
+    articleSet.getData()
     articleSet.makeHists()
 def getSummaryAndPickleFromXML(client, startIndex=0, endIndex=0, sampleSize=-1, folderName="dataset"):
     '''Simple out-of-box function that uses the ArticleSetBuilder to show and store data from a folder of XML files.'''
     articles = ArticleSetBuilder(client).retrieveArticlesFromXML(startIndex=startIndex, endIndex=endIndex, sampleSize=sampleSize, folderName = folderName).getArticles()
-    articleSet = ArticleSet(articles=articles)
+    articleSet = ArticleSet(articles)
     print("Beginning to evaluate all data")
     startTime = time.time()
     articleSet.getData()

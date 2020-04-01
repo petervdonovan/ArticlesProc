@@ -56,16 +56,25 @@
     <Compile Include="Articles\ArticleSet.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="StatsAndVisualization\Difference.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StatsAndVisualization\visualizationUtils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Utils\nlpUtils.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils\regexes.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Utils\statsUtils.py">
+    <Compile Include="StatsAndVisualization\statsUtils.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils\textProcUtils.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utils\timeUtils.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -87,6 +96,7 @@
     <Folder Include="Articles\" />
     <Folder Include="DevelopmentSets\" />
     <Folder Include="Citations\" />
+    <Folder Include="StatsAndVisualization\" />
     <Folder Include="Utils\" />
     <Folder Include="People\" />
   </ItemGroup>

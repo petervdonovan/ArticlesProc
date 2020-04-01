@@ -1,52 +1,59 @@
 import matplotlib.pyplot as plt
 import time
 import pickle
-from datetime import datetime
 import pandas as pd
-from Utils.statsUtils import confidenceIntervalOfMean
+from StatsAndVisualization.Difference import Difference, putDifferencesToExcel
+from StatsAndVisualization.statsUtils import confidenceIntervalOfMean, getCombinedXNS
+from Utils.textProcUtils import capitalizeFirstLetterEachWord
+from Utils.timeUtils import getStringTimestamp
 
+def getGranularStatisticalSummariesOfSetsDict(setsDict):
+    return pd.concat([setsDict[set].getDescriptiveStatistics() for set in setsDict], keys=[set for set in setsDict])
+def chartDifferencesInSubsetMeans(setsDict, statistic, minSampleSize=30):
+    '''Returns a DataFrame with differences in subset means and boolean values for
+    statistical significance at 0.95 and 0.99 confidence intervals, given h0 = no
+    difference and two-sided t test.'''
+    statistic = capitalizeFirstLetterEachWord(statistic)
+    setNameList = [setName for setName in setsDict if setsDict[setName].getAnalyzableArticleCount() >= minSampleSize]
+    sets = [setsDict[setName] for setName in setNameList]
+    dimension = len(setNameList)
+    data = [[None for _ in range(dimension)] for _ in range(dimension)]
+    for j in range(dimension):
+        for k in range(j):
+            data[k][j] = Difference.comparePopulationMean(sets[j].getData().loc[:, statistic], sets[k].getData().loc[:, statistic], 0.05, 0.01)
+            # Copy the data from one side of the diagonal to the other 
+            # (before b was compared to a, now copy to a compared to b)
+            data[j][k] = data[k][j].getInverted()
+    return pd.DataFrame(data=data, index=setNameList, columns=setNameList)
 
 class ArticleSet(object):
     """A set of articles to be analyzed."""
     figureCount = 0
-    INDEX_BY=['discipline', 'journal', 'original id']
     pd.set_option('display.max_rows', 500)
-    def __init__(self, articles=set()):
+    def __add__(self, other):
+        return ArticleSet(self.articles.add(other.articles))
+    def __init__(self, articles):
         self.articles = articles
         self.rawData = None
-        #self.tokenCounts = []
-        #self.parseLevels = []
-        #self.dependentClauses = []
-        #self.prepositionalPhrases = []
+        self.descriptiveStatistics = None
+        self.subsets = dict()
         plt.rcParams.update({'figure.figsize':(7,5), 'figure.dpi':100})
-        self.countOfInvalidForUnknownReason = 0
-    def markGroups(self, discipline=''):
-        '''Mark Articles as being members of certain groups for indexing.'''
-        for article in self.articles:
-            article.setGroup('journal', article.getJournal())
-            if discipline:
-                article.setGroup('discipline', discipline)
-            article.setGroup('original id', article.id)
-    def getSummariesByGroup(self, groupType=ArticleSet.INDEX_BY[0]):
-        # Returns a DataFrame with summary statistics for all articles that fall under each group,
-        # where the type of group (discipline, journal, etc.) is specified.
-        levels = self.getData().levels
-        names = self.getData().names
-        depth = names.index(groupType)
+        self.countOfInvalidForUnknownReason = None
     def getDescriptiveStatistics(self):
         '''Returns a DataFrame containing descriptive statistics.'''
-        return pd.DataFrame([
-            [self.rawData.loc[:,'Tokens'].size, self.rawData.loc[:,'Parse Tree Levels'].size,
-                         self.rawData.loc[:,'Dependent Clauses'].size, self.rawData.loc[:,'Prepositional Phrases'].size],
+        if self.descriptiveStatistics is None:
+            self.descriptiveStatistics = pd.DataFrame([
+            [self.getData().loc[:,'Tokens'].size, self.getData().loc[:,'Parse Tree Levels'].size,
+                         self.getData().loc[:,'Dependent Clauses'].size, self.getData().loc[:,'Prepositional Phrases'].size],
             
-            [self.rawData.loc[:,'Tokens'].mean(), self.rawData.loc[:,'Parse Tree Levels'].mean(),
-                         self.rawData.loc[:,'Dependent Clauses'].mean(), self.rawData.loc[:,'Prepositional Phrases'].mean()],
+            [self.getData().loc[:,'Tokens'].mean(), self.getData().loc[:,'Parse Tree Levels'].mean(),
+                         self.getData().loc[:,'Dependent Clauses'].mean(), self.getData().loc[:,'Prepositional Phrases'].mean()],
             
-            [confidenceIntervalOfMean(self.rawData.loc[:,'Tokens'], 0.95), confidenceIntervalOfMean(self.rawData.loc[:,'Parse Tree Levels'], 0.95),
-                         confidenceIntervalOfMean(self.rawData.loc[:,'Dependent Clauses'], 0.95), confidenceIntervalOfMean(self.rawData.loc[:,'Prepositional Phrases'], 0.95)],
+            [confidenceIntervalOfMean(self.getData().loc[:,'Tokens'], 0.05), confidenceIntervalOfMean(self.getData().loc[:,'Parse Tree Levels'], 0.05),
+                         confidenceIntervalOfMean(self.getData().loc[:,'Dependent Clauses'], 0.05), confidenceIntervalOfMean(self.getData().loc[:,'Prepositional Phrases'], 0.05)],
 
-            [self.rawData.loc[:,'Tokens'].std(), self.rawData.loc[:,'Parse Tree Levels'].std(),
-                         self.rawData.loc[:,'Dependent Clauses'].std(), self.rawData.loc[:,'Prepositional Phrases'].std()]
+            [self.getData().loc[:,'Tokens'].std(), self.getData().loc[:,'Parse Tree Levels'].std(),
+                         self.getData().loc[:,'Dependent Clauses'].std(), self.getData().loc[:,'Prepositional Phrases'].std()]
             ],
             columns=[
                 'Tokens',
@@ -60,25 +67,28 @@ class ArticleSet(object):
                 '0.95 CI',
                 's'
             ])
+        return self.descriptiveStatistics
     def pickleAllArticles(self, fileName="dataset"):
-        dbfile = open(fileName + "_" + datetime.now().strftime("%d-%b-%Y (%H_%M)"), 'ab')
+        dbfile = open(fileName + "_" + getStringTimestamp(), 'ab')
         pickle.dump([article.getSaveableData() for article in self.articles], dbfile)
-        print("data dumped to", fileName + "_" + datetime.now().strftime("%d-%b-%Y (%H_%M)"))
+        print("data dumped to", fileName + "_" + getStringTimestamp())
         dbfile.close()
     def makeHists(self, bins=20):
         # Create the chart
         fig, ax1 = plt.subplots(4)
         fig.suptitle = "Article Set Summary"
-        ax1[0].hist(self.rawData.loc[:,'Tokens'].tolist(), bins=bins)
-        ax1[1].hist(self.rawData.loc[:,'Parse Tree Levels'].tolist(), bins=bins)
-        ax1[2].hist(self.rawData.loc[:,'Dependent Clauses'].tolist(), bins=bins)
-        ax1[3].hist(self.rawData.loc[:,'Prepositional Phrases'].tolist(), bins=bins)
+        ax1[0].hist(self.getData().loc[:,'Tokens'].tolist(), bins=bins)
+        ax1[1].hist(self.getData().loc[:,'Parse Tree Levels'].tolist(), bins=bins)
+        ax1[2].hist(self.getData().loc[:,'Dependent Clauses'].tolist(), bins=bins)
+        ax1[3].hist(self.getData().loc[:,'Prepositional Phrases'].tolist(), bins=bins)
         plt.show()
-    def getData(self, decimalPlaces=20, verbose=True):
+    def thinOut(self):
+        self.articles = [article for article in self.articles if article.hasValidAbstract()]
+    def getData(self, decimalPlaces=20, verbose=False):
         lastTimeCheck = time.time()
         table = [] # 2D list to be converted into a DataFrame
         index = [] # list of tuples to be converted into a MultiIndex to be used in the DataFrame
-        if not self.rawData:
+        if self.rawData is None:
             for article in self.articles:
                 if article.hasValidAbstract():
                     if verbose:
@@ -100,30 +110,13 @@ class ArticleSet(object):
                         round(article.getMeanPrepositionalPhrases(), decimalPlaces)
                         ])
                     # Create row in the index, if applicable
-                    indexOfCurrent = [] # temporary variable
-                    for group in ArticleSet.INDEX_BY:
-                        groupValue = article.getGroup(group)
-                        # Convert lists to the hashable type tuple
-                        if type(groupValue) == list:
-                            indexOfCurrent.append(tuple(groupValue))
-                        else:
-                            indexOfCurrent.append(groupValue)
-                    index.append(tuple(indexOfCurrent))
-                # Make note if for some reason the current abstract is not parseable (necessary to make sure the data is valid)
-                if article.getAbstractInvalidForUnknownReason():
-                    print('-------------------------ABSTRACT INVALID FOR UNKNOWN REASON------------------------------')
-                    self.countOfInvalidForUnknownReason += 1
-                #print("Time to process article:", time.time() - lastTimeCheck)
-                lastTimeCheck = time.time()
+                    index.append(article.getId())
+            #print("Time to process article:", time.time() - lastTimeCheck)
+            lastTimeCheck = time.time()
             # Save all data to self.rawData as a DataFrame
             columnNames = ['Tokens', 'Parse Tree Levels', 'Dependent Clauses', 'Prepositional Phrases']
-            if len(index) > 0:
-                self.rawData = pd.DataFrame(table, index=pd.MultiIndex.from_tuples(index, names=ArticleSet.INDEX_BY), columns=columnNames)
-            else:
-                self.rawData = pd.DataFrame(table, columns=columnNames)
-            for i in range(len(index)):
-                self.rawData = self.rawData.sort_index()
-        print('Count of invalid abstracts for unknown reason:', self.countOfInvalidForUnknownReason)
+            self.rawData = pd.DataFrame(table, index=index, columns=columnNames)
+        if verbose: print('Count of invalid abstracts for unknown reason:', self.countOfInvalidForUnknownReason)
         return self.rawData
     def getAllContributors(self):
         '''Gets set of the most detailed versions of the names of all of the contributors.'''
@@ -157,4 +150,217 @@ class ArticleSet(object):
                 distribution[language] += 1
         return distribution
     def getIndex(self):
-        return self.rawData.index
+        return self.getData().index
+    def getSubsetsByDiscipline(self):
+        return self.getSubsetsByArticleCharacteristic('discipline', lambda article: article.getDiscipline())
+    def getSubsetsByJournal(self):
+        return self.getSubsetsByArticleCharacteristic('journal', lambda article: article.getJournal())
+    def getSubsetsByArticleCharacteristic(self, characteristicName, articleCharacteristicGetterFunction):
+        '''Returns a dictionary of subsets that have the same value returned by 
+        the articleCharacteristicGetterFunction. For instance, if the 
+        articleCharacteristicGetterFunction returns the journal in which the article
+        was published, then it returns a dictionary of subsets of articles that were
+        published in the same journal.'''
+        # Create the dictionary associated with this articleCharacteristicGetterFunction
+        # in the subsets dictionary
+        if not characteristicName in self.subsets:
+            self.subsets[characteristicName] = dict()
+            currentDict = self.subsets[characteristicName]
+            # iterate over the articles and place them in the dictionary
+            for article in self.articles:
+                characteristicValue = articleCharacteristicGetterFunction(article)
+                if characteristicValue in currentDict:
+                    currentDict[characteristicValue].add(article)
+                else:
+                    currentDict[characteristicValue] = {article}
+            # In-place conversion of all of the sets of articles into ArticleSets
+            for subset in currentDict:
+                currentDict[subset] = ArticleSet(currentDict[subset])
+        return self.subsets[characteristicName]
+    def getStatistic(self, statistic):
+        '''Returns the mean value of some descriptive statistic. This statisic can
+        be any of the statistics returned by getDescriptiveStatistics.'''
+        return self.getDescriptiveStatistics().loc['mean', capitalizeFirstLetterEachWord(statistic)]
+    def getCountOfInvalidForUnknownReason(self):
+        if self.countOfInvalidForUnknownReason == None:
+            self.countOfInvalidForUnknownReason = 0
+            for article in self.articles:
+                if article.getAbstractInvalidForUnknownReason():
+                    print('found invalid')
+                    self.countOfInvalidForUnknownReason += 1
+        return self.countOfInvalidForUnknownReason
+    def __len__(self):
+        return len(self.articles)
+    def getAnalyzableArticleCount(self):
+        return len(self.getData().index)
+    def putDisciplineWiseJournalComparisonToExcel(self, writer):
+        '''Puts a sheet showing the difference between journals of a given
+        discipline and journals of other disciplines to a separate sheet in 
+        and Excel workbook.'''
+        putDifferencesToExcel(writer, 'Discipline-Wise Journal Compari', self.getDisciplineWiseJournalComparison())
+    def putDisciplineSummariesToExcel(self, writer):
+        '''Puts summaries of syntactic characteristics of each discipline to a separate sheet
+        in an Excel workbook.'''
+        articleDataByDiscipline = getGranularStatisticalSummariesOfSetsDict(self.getSubsetsByDiscipline())
+        articleDataByDiscipline.to_excel(writer, sheet_name='By Discipline')
+    def putJournalSummariesToExcel(self, writer):
+        '''Puts summaries of syntactic characteristics of each journal to a separate sheet in
+        an Excel workbook.'''
+        articleDataByJournal = getGranularStatisticalSummariesOfSetsDict(self.getSubsetsByJournal())
+        articleDataByJournal.to_excel(writer, sheet_name='By Journal')
+    def putDisciplineDiffsToExcel(self, writer):
+        '''Puts a table of the differences between each discipline and every other discipline,
+        with respect to the mean of a given statistic.'''
+        self.putDiffsToExcel(writer, 'discipline', lambda article: article.getDiscipline())
+    def putJournalDiffsToExcel(self, writer):
+        '''Puts a table of the differences between each discipline and every other discipline,
+        with respect to the mean of a given statistic.'''
+        self.putDiffsToExcel(writer, 'journal', lambda article: article.getJournal())
+    def putDiffsToExcel(self, writer, characteristicName, articleCharacteristicGetterFunction):
+        statTypes = self.getData().columns
+        for statType in statTypes:
+            name = 'Differences by ' + capitalizeFirstLetterEachWord(characteristicName) + ' (' + capitalizeFirstLetterEachWord(statType) + ')'
+            if len(name) > 31: name = name[:31]
+            putDifferencesToExcel(
+                writer, 
+                name, 
+                chartDifferencesInSubsetMeans(
+                    self.getSubsetsByArticleCharacteristic(
+                        characteristicName, 
+                        articleCharacteristicGetterFunction
+                        ),
+                   statType)
+                )
+    def getStatsBySubset(self, 
+                         characteristicName, articleCharacteristicGetterFunction, 
+                         statNames=None):
+        '''Returns a DataFrame whose columns correspond to article statistics 
+        (listed in statNames) and whose rows correspond to subsets, 
+        selected based on an article characteristic. Each cell contains an
+        ordered pair: mean and n. Essentially, mean represents the value of 
+        the characteristic for that subset, and the n is necessary to 
+        evaluate how meaningful that statistic actually is.'''
+        if statNames == None:
+            statNames = self.getDescriptiveStatistics().columns
+        statNames = [capitalizeFirstLetterEachWord(statName) for statName in statNames]
+        subsets = self.getSubsetsByArticleCharacteristic(characteristicName, 
+                                                         articleCharacteristicGetterFunction)
+        data = \
+            [
+                [
+                    (
+                        subsets[subset].getDescriptiveStatistics().loc['mean', statName],
+                        subsets[subset].getDescriptiveStatistics().loc['n', statName]
+                    )
+                    for statName in statNames
+                ]
+                for subset in subsets
+            ]
+        return pd.DataFrame(data=data,index=[subsetName for subsetName in subsets],columns=statNames)
+    def getDisciplineWiseJournalComparison(self):
+        '''Returns a DataFrame with statistics for each journal in each
+        discipline, for comparison of journals across disciplines. 
+        See getSubsetWiseSubsetComparison for details.'''
+        return self.getSubsetWiseSubsetComparison('discipline', 
+                                             lambda article: article.getDiscipline(),
+                                             'journal', 
+                                             lambda article: article.getJournal())
+    def getSubsetWiseSubsetComparison(
+        self, 
+        characteristicName1, articleCharacteristicGetterFunction1,
+        characteristicName2, articleCharacteristicGetterFunction2):
+        '''Outputs an excel sheet consisting of a vertical stack of tables,
+        in which each table represents subsets of the whole and 
+        columns of each table represent subsets of the subsets, formed
+        by a different criteria. For instance, if each table corresponds to a
+        discipline, each column in the table could correspond to a journal.
+        Each row in the table corresponds to a statistic by which the 
+        sub-subsets, if you will, are measured. For instance, in the table 
+        for discipline X, there is a column for journal Y, and each cell in
+        the column for journal Y corresponds to the Difference between that cell
+        and the corresponding cells for journals OUTSIDE of the table for 
+        discipline X, in other tables. The intention of this spreadsheet is to
+        potentially refute the null hypothesis that (for instance) a journal in 
+        discipline X is not statistically different from journals in other 
+        disciplines (or whatever other characteristic they are separated by)'''
+        subsetsToCompare = self.getSubsetsByArticleCharacteristic(
+            characteristicName1, articleCharacteristicGetterFunction1
+            )
+        # Get a list of lists of stat Series. Each of these Series has
+        # and index with 3 labels: mean, n, and s.
+        subsetTables = pd.concat([
+            getGranularStatisticalSummariesOfSetsDict(
+                getDictionaryWithNumbersAsKeys(
+                    subsetsToCompare[subset].getSubsetsByArticleCharacteristic(
+                        characteristicName2, articleCharacteristicGetterFunction2
+                    )
+                )
+            ).unstack(0).append(pd.DataFrame(index=['t']))
+            for subset in subsetsToCompare
+            ], keys=[subset for subset in subsetsToCompare]).stack(level=0, dropna=False).reorder_levels([2, 0, 1]).sort_index()
+        getGranularStatisticalSummariesOfSetsDict(
+                getDictionaryWithNumbersAsKeys(
+                    subsetsToCompare['math'].getSubsetsByArticleCharacteristic(
+                        characteristicName2, articleCharacteristicGetterFunction2
+                    )
+                )
+            ).to_excel('intermediate_' + getStringTimestamp() + '.xlsx')
+        #, columns=subsetsToCompare[subset].getSubsetsByArticleCharacteristic(
+        #                characteristicName2, articleCharacteristicGetterFunction2
+        #            ).keys()
+        #print('got subset tables:', subsetTables)
+        #subsetTables.to_excel("554test.xlsx")
+        # Now it is necessary to convert each stat series in 
+        # the cells of each subsetTable to a Difference. In order to do 
+        # that, it will be necesary to calculate a test statistic and 
+        # determine statistical significance at a couple of alphas.
+        #print(subsetTables)
+        for currentSubset in subsetsToCompare:
+            otherSubsets = list(subsetsToCompare.keys())
+            otherSubsets.remove(currentSubset)
+            otherArticles = set()
+            for otherSubset in otherSubsets:
+                otherArticles = otherArticles.union(subsetsToCompare[otherSubset].articles)
+            otherSubsetSet = ArticleSet(otherArticles)
+            otherSubsetDescriptiveStatistics = otherSubsetSet.getDescriptiveStatistics()
+            print(otherSubsetDescriptiveStatistics)
+            #print('length of otherSubsetTables:', len(otherSubsetTables))
+            for stat in otherSubsetDescriptiveStatistics.columns:
+                outsideCurrentSubsetXNS = otherSubsetDescriptiveStatistics[stat]
+                #summariesOfOtherSubgroups = [
+                #    getCombinedXNS(subsetTables.loc[otherSubsetTable, [stat]])
+                #    for otherSubsetTable in otherSubsetTables
+                #    ]
+                ##print(summariesOfOtherSubgroups)
+                #outsideCurrentSubsetXNS = getCombinedXNS(
+                #    pd.DataFrame(data=summariesOfOtherSubgroups, index=summariesOfOtherSubgroups[0].index)
+                #    )
+                #print(outsideCurrentSubsetXNS)
+                print(subsetTables.index)
+                print(subsetTables.loc[stat])
+                print(subsetTables.loc[(stat, currentSubset)])
+                for _, column in subsetTables.loc[(stat, currentSubset)].iteritems():
+                    print(column)
+                    column['t'] = Difference.propComparePopulationMean(
+                        column['n'],
+                        outsideCurrentSubsetXNS.at['n'],
+                        column['mean'],
+                        outsideCurrentSubsetXNS.at['mean'],
+                        column['s'],
+                        outsideCurrentSubsetXNS.at['s'],
+                        [0.05, 0.01]
+                        )
+                    print(column['t'])
+        #print(subsetTables)
+        print("Done getting subsettables.")
+        return subsetTables
+
+def getDictionaryWithNumbersAsKeys(meaningfulKeysDict):
+    '''Returns a dictionary that is a copy of the dictionary passed,
+    except the keys are changed to numbers starting with zero.'''
+    meaninglessKeysDict = {}
+    count = 0
+    for key in meaningfulKeysDict:
+        meaninglessKeysDict[count] = meaningfulKeysDict[key]
+        count += 1
+    return meaninglessKeysDict

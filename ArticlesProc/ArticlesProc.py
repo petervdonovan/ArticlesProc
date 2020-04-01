@@ -2,13 +2,17 @@ from stanfordnlp.server import CoreNLPClient
 from stanfordcorenlp import StanfordCoreNLP
 
 from Citations.Citation import Citation
-from Articles.ArticleSet import ArticleSet
+from Articles.ArticleSet import ArticleSet, getGranularStatisticalSummariesOfSetsDict, chartDifferencesInSubsetMeans
 from Articles.ArticleSetBuilder import ArticleSetBuilder, getSummaryFromPickle, getSummaryAndPickleFromXML
 
 from DevelopmentSets.citationRecognitionLiteratureSet681 import sampleLiteratureCitations
 from DevelopmentSets.citationRecognitionBiologySet981 import sampleBiologyCitations
 
+from Utils.timeUtils import getStringTimestamp
+from Utils.textProcUtils import capitalizeFirstLetterEachWord
+
 from random import sample
+import pandas as pd
 
 #           Activate the environment
 #           Navigate to folder containing CoreNLP
@@ -31,28 +35,25 @@ python articlesproc.py
 #from stanza.nlp.corenlp import CoreNLPClient
 #with CoreNLPClient(server='http://localhost:9000', default_annotators=['ssplit', 'tokenize', 'lemma', 'pos', 'ner']) as client:
 
-with CoreNLPClient(annotators=['tokenize', 'ssplit', 'parse'], be_quiet=True, memory='16G', threads=8, timeout=240000) as client:
-    mathArticles = ArticleSetBuilder(client).retrieveArticlesFromPickle('FULL_COMBINED_MATH_701_DATASET_18-Mar-2020 (15_18)').getArticles()
-    sociologyArticles = ArticleSetBuilder(client).retrieveArticlesFromPickle('FULL_COMBINED_SOCIOLOGY_711_DATASET_19-Mar-2020 (14_34)').getArticles()
-    literatureArticles = ArticleSetBuilder(client).retrieveArticlesFromPickle('FULL_DATASET_receipt-id-1451681-part-001 (literature)_19-Mar-2020 (16_55)').getArticles()
-    biologyArticles = ArticleSetBuilder(client).retrieveArticlesFromPickle('FULL_DATASET_receipt-id-1423981-part-001 (biology)_20-Mar-2020 (01_37)').getArticles()
-    
-    ArticleSet(articles=mathArticles).markGroups(discipline='math')
-    ArticleSet(articles=sociologyArticles).markGroups(discipline='sociology')
-    ArticleSet(articles=literatureArticles).markGroups(discipline='literature')
-    ArticleSet(articles=biologyArticles).markGroups(discipline='biology')
+articles = ArticleSetBuilder(None).retrieveArticlesFromPickle('FULL_ARTICLE_SET_23-Mar-2020 (15_02)').getArticles()
+print('articles retrieved')
+articleSet = ArticleSet(articles)
+getGranularStatisticalSummariesOfSetsDict(articleSet.getSubsetsByDiscipline()).unstack(0).append(pd.DataFrame(index=['t'])).to_excel('test_' + getStringTimestamp() + '.xlsx')
+print('articleSet created')
+articleSet.thinOut()
+print('articleSet thinned')
 
-    allArticles = mathArticles + sociologyArticles + literatureArticles + scienceArticles
-    fullArticleSet = ArticleSet(allArticles)
-    fullArticleSet.getData(verbose=False)
-    fullArticleSet.makeHists()
-    fullArticleSet.pickleAllArticles(fileName="FULL_ARTICLE_SET_3_20")
-    #literatureArticles = ArticleSetBuilder(client).retrieveArticlesFromPickle('FULL_DATASET_receipt-id-1451681-part-001 (literature)_19-Mar-2020 (16_55)').getArticles()
-    #litArticleSet = ArticleSet(articles=sample(literatureArticles, 1000))
-    #litArticleSet.markGroups(discipline='literature')
-    #print(litArticleSet.getData(indexBy=['discipline', 'journal', 'id'], verbose=False))
-    
+workbookName = 'discipline-wise-journal-comparison_' + getStringTimestamp() + '.xlsx'
+with pd.ExcelWriter(workbookName) as writer:
+    articleSet.putDisciplineWiseJournalComparisonToExcel(writer)
 
-#print('dataset size', len(sampleLiteratureCitations))
-#for citation in sampleLiteratureCitations[::5][180:]:
-#    print(Citation(citation).getNameList())
+
+#with CoreNLPClient(annotators=['tokenize', 'ssplit', 'parse'], be_quiet=True, memory='16G', threads=8, timeout=240000) as client:
+    
+    #workbookName = 'full_dataset_summary_' + getStringTimestamp() + '.xlsx'
+    #with pd.ExcelWriter(workbookName) as writer:
+    #    articleSet.putDisciplineSummariesToExcel(writer)
+    #    articleSet.putJournalSummariesToExcel(writer)
+    #    articleSet.putDisciplineDiffsToExcel(writer)
+    #    articleSet.putJournalDiffsToExcel(writer)
+

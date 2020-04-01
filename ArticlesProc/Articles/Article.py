@@ -10,7 +10,7 @@ class Article(object):
         if properties:
             self.properties = properties
         '''Dictionary containing found properties of the article -- to be filled in lazily as specific properties are requested.'''
-        self.id = Article.id
+        self.properties['id'] = Article.id
         '''The unique id of this article.'''
         Article.id += 1
     def getTitle(self):
@@ -33,30 +33,11 @@ class Article(object):
                 return
         self.articlesThatCiteThis.append(additionalArticle)
     def getId(self):
-        return self.id
-    def setGroup(self, groupType, groupName):
-        '''Records that this Article is a member of groupName, which is a kind of groupType.
-        For instance, if groupType == "discipline" and groupName == "mathematics", then this 
-        Article is a member of the "mathematics" Articles group, which is a kind of discipline.'''
-        # Sets a key-value pair inside the groups dictionary in the properties dictionary.
-        # The key is the type of group, and the value is the group. For instance, if articles are
-        # to be grouped by discipline, and the discipline of this Article is mathematics, then
-        # the key is "discipline" and the value is "mathematics".
-        if not 'groups' in self.properties:
-            self.properties['groups'] = {}
-        #if not groupType in self.properties['groups']:
-        #    self.properties['groups'][groupType] = []
-        #if not groupName in self.properties['groups'][groupType]:
-        #    self.properties['groups'][groupType].append(groupName)
-        self.properties['groups'][groupType] = groupName
-    def getIsMemberOfGroup(self, groupType, groupName):
-        '''Returns whether or not this Article is a member of a certain grouping of Articles.'''
-        if not 'groups' in self.properties or not groupType in self.properties['groups']:
-            return False
-        return groupName in self.properties['groups']['groupType']
-    def getGroup(self, groupType):
-        '''Returns which group[s] this Article falls under. For instance, if the groupType
-        is "discipline", then this could return None or "biology" or "math".'''
-        if not 'groups' in self.properties or not groupType in self.properties['groups']:
+        return self.properties['id']
+    def setDiscipline(self, discipline):
+        self.properties['discipline'] = discipline
+    def getDiscipline(self):
+        try:
+            return self.properties['discipline']
+        except:
             return None
-        return self.properties['groups'][groupType]

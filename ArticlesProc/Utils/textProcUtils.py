@@ -13,3 +13,8 @@ def replaceWhiteSpaceWithSpace(text):
 def escapeDoubleQuotes(text):
     '''Inserts a \ before any straight double quotes.'''
     return re.sub(r'"', r'\"', text)
+def capitalizeFirstLetterEachWord(text):
+    '''Capitalizes the first letter of each word.'''
+    return ''.join(
+        [piece.capitalize() for piece in re.split(r'\b', text)]
+        )
