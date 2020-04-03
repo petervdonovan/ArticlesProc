@@ -50,6 +50,9 @@
     <Compile Include="DevelopmentSets\citationRecognitionMathSet701.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DevelopmentSets\citationRecognitionSociologySet711.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="People\Name.py">
       <SubType>Code</SubType>
     </Compile>

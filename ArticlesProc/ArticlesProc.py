@@ -7,9 +7,11 @@ from Articles.ArticleSetBuilder import ArticleSetBuilder, getSummaryFromPickle, 
 
 from DevelopmentSets.citationRecognitionLiteratureSet681 import sampleLiteratureCitations
 from DevelopmentSets.citationRecognitionBiologySet981 import sampleBiologyCitations
+from DevelopmentSets.citationRecognitionSociologySet711 import sampleSociologyCitations
+from DevelopmentSets.citationRecognitionMathSet701 import sampleMathCitations
 
 from Utils.timeUtils import getStringTimestamp
-from Utils.textProcUtils import capitalizeFirstLetterEachWord
+from Utils.textProcUtils import capitalizeFirstLetterEachWord, escapeDoubleQuotes
 
 from random import sample
 import pandas as pd
@@ -30,30 +32,28 @@ C:/Users/pvdon/.virtualenvs/env-64bit/Scripts/activate
 cd C:/Users/pvdon/documents/research/articlesproc/articlesproc
 python articlesproc.py
 """
-# StanfordCoreNLP('http://localhost', port=9000)
-#with CoreNLPClient('http://localhost:9000') as client:
-#from stanza.nlp.corenlp import CoreNLPClient
-#with CoreNLPClient(server='http://localhost:9000', default_annotators=['ssplit', 'tokenize', 'lemma', 'pos', 'ner']) as client:
 
-articles = ArticleSetBuilder(None).retrieveArticlesFromPickle('FULL_ARTICLE_SET_23-Mar-2020 (15_02)').getArticles()
-print('articles retrieved')
-articleSet = ArticleSet(articles)
-getGranularStatisticalSummariesOfSetsDict(articleSet.getSubsetsByDiscipline()).unstack(0).append(pd.DataFrame(index=['t'])).to_excel('test_' + getStringTimestamp() + '.xlsx')
-print('articleSet created')
-articleSet.thinOut()
-print('articleSet thinned')
+print(len(sampleMathCitations))
+multipleYearsCount = 0
+noYearsCount = 0
+for raw in sampleMathCitations[::20][100:120]:
+    citation = Citation(raw)
+#    if len(citation.getYear()) > 1:
+#        multipleYearsCount += 1
+#    elif not citation.getYear():
+#        noYearsCount += 1
+#print('multiple years count:', multipleYearsCount)
+#print('no years count:', noYearsCount)
+    if citation.getNameList()[1]:
+        print(raw[:115])
+        print([str(name) for name in citation.getNames()])
+        print()
 
-workbookName = 'discipline-wise-journal-comparison_' + getStringTimestamp() + '.xlsx'
-with pd.ExcelWriter(workbookName) as writer:
-    articleSet.putDisciplineWiseJournalComparisonToExcel(writer)
+
 
 
 #with CoreNLPClient(annotators=['tokenize', 'ssplit', 'parse'], be_quiet=True, memory='16G', threads=8, timeout=240000) as client:
-    
-    #workbookName = 'full_dataset_summary_' + getStringTimestamp() + '.xlsx'
-    #with pd.ExcelWriter(workbookName) as writer:
-    #    articleSet.putDisciplineSummariesToExcel(writer)
-    #    articleSet.putJournalSummariesToExcel(writer)
-    #    articleSet.putDisciplineDiffsToExcel(writer)
-    #    articleSet.putJournalDiffsToExcel(writer)
-
+def getSampleOfRawCitations(articles):
+    for article in articles:
+        for citation in article.getCitations():
+            print('"' + escapeDoubleQuotes(str(citation)) + '", ')

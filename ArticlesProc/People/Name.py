@@ -9,9 +9,9 @@ class Name(object):
         '''The first letter of every word in the given name.'''
         self.middleNameInitials = middleNameInitials
         '''The first letter of every word in the middle name.'''
-        self.givenName = self.setGivenName(givenName)
+        self.setGivenName(givenName)
         '''The given name (also called the first name).'''
-        self.middleName = self.setMiddleName(middleName)
+        self.setMiddleName(middleName)
         '''The given name (also called the first name).'''
         self.surname = surname
         '''The surname (also called the last name).'''
@@ -69,13 +69,18 @@ class Name(object):
             middleNameInitials = Name.getInitialsFromString(middleName)
     def __str__(self):
         '''Returns the string representation of the name.'''
-        nameTuple = self.getAsTuple()
-        nameStr = nameTuple[-1] + ', '
-        for i, namePart in enumerate(nameTuple):
-            if i == len(nameTuple) - 1:
-                break
-            if type(namePart) == str:
-                nameStr += namePart + ' '
-        return nameStr.strip()
+        if not self.middleName:
+            middleNameStandIn = ''.join(initial + '.' for initial in self.middleNameInitials)
+        else:
+            middleNameStandIn = self.middleName
+        if not self.givenName:
+            givenNameStandIn = ''.join(initial + '.' for initial in self.givenNameInitials)
+        else:
+            givenNameStandIn = self.givenName
+        out = self.surname
+        if givenNameStandIn or middleNameStandIn: out +=  ','
+        if givenNameStandIn: out += ' ' + givenNameStandIn
+        if middleNameStandIn: out += ' ' + middleNameStandIn
+        return out
 
 

@@ -10,7 +10,7 @@ regexes = {
     'season': '((Spring)|(Summer)|(Fall)|(Autumn)|(Winter)|(spring)|(summer)|(fall)|(autumn)|(winter))',
     'recent year': r'20[0-2][0-9]', #in the 2000s
     'citable year': r'(14|15|16|17|18|19|20)[0-9{2}]', #Between 1400 and present
-    'name': r'[^\b0-9\.,a-z\(\)‘"\'’“”—][^\s0-9\.,?!\"”]+',
+    'name': r'[^\b0-9\.,a-z\(\)‘"\'’“”—\s][^\s0-9\.,?!\"”]+',
     'initial': '[^\s0-9a-z\.,\(\)‘"\'’“”\`~!@#$%^&\*\(\)_\+=\-<>\?/;:—]',
     'title in quotes': r'["“][^.]*[\.\?!]["”]',
     'title in single quotes': r'[‘\'][^.]*[’\']',

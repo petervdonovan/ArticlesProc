@@ -184,7 +184,6 @@ class RealArticle(Article):
             for citation in self.getRootElement().iter('mixed-citation'):
                 simplifiedCitationRaw = stripMarkup(ET.tostring(citation, encoding='unicode')).strip()
                 simplifiedCitationRaw = replaceWhiteSpaceWithSpace(simplifiedCitationRaw)
-                #print(stripMarkup(ET.tostring(citation, encoding='unicode')).strip())
                 self.properties['citations'].append( Citation(simplifiedCitationRaw) )
         return self.properties['citations']
     def getStyleGuides(self):
@@ -192,7 +191,6 @@ class RealArticle(Article):
         citations = self.getCitations()
         styleGuides = set()
         for citation in citations:
-            print('"' + escapeDoubleQuotes(str(citation)) + '", ')
             for styleGuide in citation.getStyleGuides():
                 styleGuides.add(styleGuide)
         return styleGuides

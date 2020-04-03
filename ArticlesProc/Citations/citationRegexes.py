@@ -1,23 +1,106 @@
 from Utils.regexes import regexes
+from collections import OrderedDict
+import re
+def getParts(namesRegex, str):
+        '''Returns a dictionary containing the parts of a name, gotten 
+        from a raw string and the namesRegex that describes the raw string.'''
+        surname = ''
+        givenName = ''
+        middleName = ''
+        initials = []
+        givenNameInitials = []
+        middleNameInitials = []
+        nr = nameRegexes['name']
+        ir = nameRegexes['initial']
+        if namesRegex == 'surname, given name':
+            names = [groups for groups in re.findall(nr, str)]
+            surname = names[0]
+            givenName = names[1]
+        elif (namesRegex == 'surname, given name middle name' or 
+            namesRegex == 'surname, given name and optionally middle name'):
+            surname = getParts('surname, given name', str)['surname']
+            givenName = getParts('surname, given name', str)['givenName']
+            middleName = [
+                groups for groups in re.findall(nr, str) 
+                if groups[0] not in surname and 
+                   groups[0] not in givenName
+                ]
+            if middleName: middleName = middleName[0]
+            else: middleName = ''
+        elif namesRegex == 'surname, given name and optionally middle initial':
+            surname = getParts('surname, given name', str)['surname']
+            givenName = getParts('surname, given name', str)['givenName']
+            str2 = str.replace(surname, '').replace(givenName, '')
+            middleNameInitials = [groups[0] for groups in re.findall(ir, str2)]
+        elif namesRegex == 'given name optionally middle name surname':
+            names = [groups for groups in re.findall(nr, str)]
+            givenName = names[0]
+            surname = names[-1]
+            if len(names) > 2:
+                middleName = ' '.join(names[1:-1])
+        elif namesRegex == 'given name optionally middle initial surname':
+            surname = getParts('given name optionally middle name surname', str)['surname']
+            givenName = getParts('given name optionally middle name surname', str)['givenName']
+            str2 = str.replace(surname, '').replace(givenName, '')
+            middleNameInitials = [groups[0] for groups in re.findall(ir, str2)]
+        elif namesRegex == 'name in order':
+            if re.match(nameRegexes['given name optionally middle name surname'], str):
+                return getParts('given name optionally middle name surname', str)
+            else:
+                return getParts('given name optionally middle initial surname', str)
+        elif (namesRegex in [
+            'surname, first initial', 
+            'surname, initials', 
+            'surname, initials with dot optional space optional', 
+            'surname, initials with dot', 
+            'surname, initials with dot space optional', 
+            'surname initial(s)', 
+            'surname, initial(s) no dots no spaces'
+            ]):
+            surname = re.findall(nr, str)[0]
+            str2 = str.replace(surname, '')
+            initials = [groups[0] for groups in re.findall(ir, str2)]
+        elif (namesRegex in ['initials with dot space surname', 'initials with dot surname']):
+            surname = re.findall(nr, str)[-1]
+            str2 = str.replace(surname, '')
+            initials = [groups[0] for groups in re.findall(ir, str2)]
+        if initials:
+            if not givenNameInitials:
+                givenNameInitials = [initials[0]]
+                if len(initials) > 1:
+                    middleNameInitials = initials[1:]
+            else:
+                middleNameInitials = initials
+        return {
+            'surname': surname,
+            'givenName': givenName,
+            'middleName': middleName,
+            'givenNameInitials': givenNameInitials,
+            'middleNameInitials': middleNameInitials
+            }
 # Names regexes
-nameRegexes = {}
-nameRegexes['surname, given name'] = r'(' + regexes['name'] + r', ' + regexes['name'] + r')'
-nameRegexes['surname, given name middle name'] = r'(' + nameRegexes['surname, given name'] + r' ' + regexes['name'] + r')'
-nameRegexes['surname, given name and optionally middle name'] = r'(' + nameRegexes['surname, given name'] + r'( ' + regexes['name'] + r')?)'
-nameRegexes['surname, given name and optionally middle initial'] = r'(' + nameRegexes['surname, given name'] + r' ' + regexes['initial'] + '\.( ' + regexes['initial'] + r'\b){0,2})'
-nameRegexes['given name optionally middle name surname'] = r'(' + regexes['name'] + r' ' + regexes['name'] + r' (' + regexes['name'] + r')?)'
-nameRegexes['given name optionally middle initial surname'] = r'(' + regexes['name'] + r' (' + regexes['initial'] + '\. )?' + regexes['name'] + r')'
-nameRegexes['surname, first initial'] = r'(' + regexes['name'] + r', ' + regexes['initial'] + '\.)'
-nameRegexes['surname, initials'] = r'(' + regexes['name'] + r' ' + regexes['initial'] + '{1,3}\b)'
-nameRegexes['surname, initials with dot optional space optional'] = r'(' + regexes['name'] + r',? (\.? ?' + regexes['initial'] + '){1,3}((\.)|\b))'
-nameRegexes['surname, initials with dot'] = r'(' + regexes['name'] + r',?( ' + regexes['initial'] + '\.){1,3})'
-nameRegexes['surname, initials with dot space optional'] = r'(' + regexes['name'] + r',? ?( ?' + regexes['initial'] + '\.){1,3})'
-nameRegexes['surname initial(s)'] = r'(' + regexes['name'] + r' ' + regexes['initial'] + '(' + regexes['initial'] + '){0,2}\b)'
-nameRegexes['surname, initial(s) no dots no spaces'] = r'(' + regexes['name'] + r',? [^\s0-9a-z\.,‘"\'’“”\(\)\[\]]([^\s0-9a-z\.,‘"\'’“”\(\)\[\]]){0,2}\b)'
-nameRegexes['initials with dot space surname'] = r'((' + regexes['initial'] + '\. ){0,3}' + regexes['name'] + r')'
-nameRegexes['initials with dot surname'] = r'((' + regexes['initial'] + '\. ?){0,3} ' + regexes['name'] + r')'
+nameRegexes = {
+    'name': r'[^\b0-9\.,a-z\(\)‘"\'’“”—\s][^\s0-9\.,?!\"”]+',
+    'initial': '[^\s0-9a-z\.,\(\)‘"\'’“”\`~!@#$%^&\*\(\)_\+=\-<>\?/;:—]',
+    }
+nameRegexes['surname, given name'] = r'(' + nameRegexes['name'] + r', ' + nameRegexes['name'] + r')'
+nameRegexes['surname, given name middle name'] = r'(' + nameRegexes['surname, given name'] + r' ' + nameRegexes['name'] + r')'
+nameRegexes['surname, given name and optionally middle name'] = r'(' + nameRegexes['surname, given name'] + r'( ' + nameRegexes['name'] + r')?)'
+nameRegexes['surname, given name and optionally middle initial'] = r'(' + nameRegexes['surname, given name'] + r' ' + nameRegexes['initial'] + '\.( ' + nameRegexes['initial'] + r'\b){0,2})'
+nameRegexes['given name optionally middle name surname'] = r'(' + nameRegexes['name'] + r' ' + nameRegexes['name'] + r' (' + nameRegexes['name'] + r')?)'
+nameRegexes['given name optionally middle initial surname'] = r'(' + nameRegexes['name'] + r' (' + nameRegexes['initial'] + '\. )?' + nameRegexes['name'] + r')'
+nameRegexes['name in order'] = r'(' + nameRegexes['given name optionally middle name surname'] + r'|' + nameRegexes['given name optionally middle initial surname'] + r')'
+nameRegexes['surname, first initial'] = r'(' + nameRegexes['name'] + r', ' + nameRegexes['initial'] + '\.)'
+nameRegexes['surname, initials'] = r'(' + nameRegexes['name'] + r' ' + nameRegexes['initial'] + '{1,3}\b)'
+nameRegexes['surname, initials with dot optional space optional'] = r'(' + nameRegexes['name'] + r',? (\.? ?' + nameRegexes['initial'] + '){1,3}((\.)|\b))'
+nameRegexes['surname, initials with dot'] = r'(' + nameRegexes['name'] + r',?( ' + nameRegexes['initial'] + '\.){1,3})'
+nameRegexes['surname, initials with dot space optional'] = r'(' + nameRegexes['name'] + r',? ( ?' + nameRegexes['initial'] + '\.){1,3})'
+nameRegexes['surname initial(s)'] = r'(' + nameRegexes['name'] + r' ' + nameRegexes['initial'] + '(' + nameRegexes['initial'] + '){0,2}\b)'
+nameRegexes['surname, initial(s) no dots no spaces'] = r'(' + nameRegexes['name'] + r',? [^\s0-9a-z\.,‘"\'’“”\(\)\[\]]([^\s0-9a-z\.,‘"\'’“”\(\)\[\]]){0,2}\b)'
+nameRegexes['initials with dot space surname'] = r'((' + nameRegexes['initial'] + '\. ){0,3}' + nameRegexes['name'] + r')'
+nameRegexes['initials with dot surname'] = r'((' + nameRegexes['initial'] + '\. ?){0,3} ' + nameRegexes['name'] + r')'
 # Name lists
-nameListRegexes = {}
+nameListRegexes = OrderedDict()
 nameListRegexes['ama name list'] = r'(' + nameRegexes['surname initial(s)'] + r'(, ' + nameRegexes['surname initial(s)'] + r')*?((\.)|(, et al.)))'
 nameListRegexes['apa name list'] = r'(' + nameRegexes['surname, initials with dot optional space optional'] + r'((, ' + nameRegexes['surname, initials with dot optional space optional'] + r')*' + \
         r',? (&|((\.){3,4})|…) ' + nameRegexes['surname, initials with dot optional space optional'] + r')?)'
@@ -43,12 +126,14 @@ nameListRegexes['harvard name list'] = r'(' + nameRegexes['surname, initials wit
 #Non-style-guide-specific nameLists
 nameListRegexes['with semicolons'] = r'(' + nameRegexes['surname, initials with dot space optional'] + '(; ' + nameRegexes['surname, initials with dot space optional'] + r')*(, ((and)|e|y) ' + nameRegexes['surname, initials with dot space optional'] + r')?)'
 nameListRegexes['pure surname initials'] = r'((' + nameRegexes['surname, initials'] + r',? )+)'
-nameListRegexes['pure surname initials no dots no spaces'] = r'((' + nameRegexes['surname, initial(s) no dots no spaces'] + r'(,|(\.))? )+(et al.)?)'
+nameListRegexes['pure surname initials no dots no spaces'] = r'((' + nameRegexes['surname, initial(s) no dots no spaces'] + r'(,|(\.))? (and )?)+(et al.)?)'
 nameListRegexes['pure initials surname with dots'] = r'((' + nameRegexes['initials with dot surname'] + r'(,|(\.))?( ((and)|e|y))? )+(et al.)?)'
 nameListRegexes['surname initials then initials surname'] = r'(' + nameRegexes['surname, initials with dot'] + r'(, ' + nameRegexes['initials with dot space surname'] + r')*' + r'(,? ((and)|e|y) ' + nameRegexes['initials with dot space surname'] + r')?)'
 nameListRegexes['surname initials et al.'] = r'(' + nameRegexes['surname, initials with dot space optional'] + r', et al\.' + r')'
 nameListRegexes['surname initials list with "and"'] = r'(' + nameRegexes['surname, initials with dot space optional'] + r'((, ' + nameRegexes['surname, initials with dot space optional'] + r')*' + \
         r',? ((and)|e|y) ' + nameRegexes['surname, initials with dot space optional'] + r')?)'
+nameListRegexes['apa variant, given name first'] = r'(' + nameRegexes['surname, given name and optionally middle name'] + r'((, ' + nameRegexes['name in order'] + r')*' + \
+        r',? (&|((\.){3,4})|…) ' + nameRegexes['name in order'] + r')?[^\sa-z])'
 #nameListRegexes['pure surname initials list'] = r'(' + nameRegexes['surname, initials with dot space optional'] + r'(, ' + nameRegexes['surname, initials with dot space optional'] + r')*)'
 '''
 The following style guides were found in the EBSCO citation generator.
