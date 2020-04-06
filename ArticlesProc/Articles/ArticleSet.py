@@ -31,7 +31,21 @@ class ArticleSet(object):
     figureCount = 0
     pd.set_option('display.max_rows', 500)
     def __add__(self, other):
-        return ArticleSet(self.articles.add(other.articles))
+        '''Return a new ArticleSet with a combination of the
+        articles in this ArticleSet and the articles in 
+        another ArticleSet.'''
+        articles = set()
+        for theirArticle in other.articles:
+            found = False
+            for myArticle in self.articles:
+                if myArticle.isEquivalent(theirArticle):
+                    myArticle.add(theirArticle)
+                    found = True
+                    break
+            if not found:
+                articles.add(theirArticle)
+        articles = articles.union(self.articles)
+        return ArticleSet(articles)
     def __init__(self, articles):
         self.articles = articles
         self.rawData = None

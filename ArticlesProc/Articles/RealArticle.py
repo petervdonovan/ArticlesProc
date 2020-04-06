@@ -54,10 +54,12 @@ class RealArticle(Article):
         return cls(root, path, client, rootElement=rootElement, articleMeta=articleMeta)
 
     @classmethod
-    def initFromRaw(cls, raw, client):
+    def initFromRaw(cls, raw, client=None):
         '''Reconstructs the article based on its data saved in a raw format.'''
+        assert(type(raw[0]) == str)
         root = raw[0]
         '''The root file path to the article XML files.'''
+        assert(type(raw[1]) == str)
         path = raw[1]
         '''The path to the raw article XML from the root. If the root is the folder containing the article XML files, this is the name of the file.'''
         properties = raw[2]
@@ -98,6 +100,14 @@ class RealArticle(Article):
                 self.properties['title'] = None
             else:
                 self.properties['title'] = self.getArticleMeta().find('title-group').find('article-title').text
+        return self.properties['title']
+    def getPublicationYear(self):
+        '''Returns the publication year of the article.'''
+        if not 'publicationYear' in self.properties:
+            try:
+                self.properties['publicationYear'] = self.getArticleMeta().find('pub-date').find('year').text
+            except:
+                self.properties['publicationYear'] = None
         return self.properties['title']
     def getReportedLanguage(self):
         '''Returns the language of the article (as reported in the XML file).'''
@@ -177,6 +187,9 @@ class RealArticle(Article):
                 contributorsList.append(Name(givenName, surname))
             self.properties['contributors'] = contributorsList
         return self.properties['contributors']
+    def getEtAl(self):
+        '''Returns whether there are contributors who are not accounted for.'''
+        return False
     def getCitations(self):
         '''Returns a list of all the citations in the article (and stores the list in the properties dictionary).'''
         if not 'citations' in self.properties:
@@ -259,3 +272,5 @@ class RealArticle(Article):
             except:
                 self.properties['journal'] = None
         return self.properties['journal']
+    def combine(self, other):
+        return RealArticle.initFromRaw((self.root, self.path, super().combine(other).properties))

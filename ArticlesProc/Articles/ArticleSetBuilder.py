@@ -63,7 +63,7 @@ class ArticleSetBuilder(object):
             dbfile = open(fileName, 'rb')
             db = pickle.load(dbfile)
             for articleRaw in db:
-                self.articles.add(RealArticle.initFromRaw(articleRaw, self.client))
+                self.articles.add(RealArticle.initFromRaw(articleRaw, client=self.client))
         return self
     def getArticles(self):
         return self.articles

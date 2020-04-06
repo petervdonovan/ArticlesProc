@@ -2,9 +2,10 @@ import re
 
 class Name(object):
     """Stores a name."""
-    def __init__(self, givenName='', middleName = '', surname='', 
+    def __init__(self, surname='', givenName='', middleName='', 
                  givenNameInitials=[], middleNameInitials=[]):
         '''Stores the person's given name and surname.'''
+        assert(surname != '' and surname is not None)
         self.givenNameInitials = givenNameInitials
         '''The first letter of every word in the given name.'''
         self.middleNameInitials = middleNameInitials
@@ -19,24 +20,26 @@ class Name(object):
         return (tuple(self.givenNameInitials), self.givenName, 
                 tuple(self.middleNameInitials), self.surname)
     def __hash__(self):
-        return hash(self.getAsTuple())
+        '''Hash is based only on surname.'''
+        #return hash(self.getAsTuple())
+        return hash(self.surname)
     def __eq__(self, other):
-        '''Returns whether this name is exactly identical to another name.'''
-        return self.__hash__() == other.__hash__()
+        '''Returns whether this name has the same surname as another name.'''
+        return self.surname == other.surname
     def __lt__(self, other):
         '''Returns whether this name comes alphabetically before another name.'''
-        return str(self) < str(other)
+        return self.surname < other.surname
     def __le__(self, other):
         '''Returns whether this name comes alphabetically before another name,
         or if it is equal to the other name.'''
-        return str(self) <= str(other)
+        return self.surname <= other.surname
     def __gt__(self, other):
         '''Returns whether this name comes alphabetically after another name.'''
-        return str(self) > str(other)
-    def __le__(self, other):
+        return self.surname > other.surname
+    def __ge__(self, other):
         '''Returns whether this name comes alphabetically after another name,
         or if it is equal to the other name.'''
-        return str(self) >= str(other)
+        return self.surname >= other.surname
     def contains(self, other):
         '''Returns whether the other name could be the same name as this name.
         This will return true if not enough information is available to prove 
@@ -45,14 +48,15 @@ class Name(object):
             return False
         if self.givenName and other.givenName and self.givenName != other.givenName:
             return False
-        if self.givenName and other.givenName and self.givenName != other.givenName:
+        if self.middleName and other.middleName and self.middleName != other.middleName:
             return False
         if self.givenNameInitials and other.givenNameInitials and \
-            not set(other.givenNameInitials).issubset(self.givenNameInitials):
+            not set(other.givenNameInitials).issubset(set(self.givenNameInitials)):
             return False
         if self.middleNameInitials and other.middleNameInitials and \
-            not set(other.givenNameInitials).issubset(self.givenNameInitials):
+            not set(other.middleNameInitials).issubset(set(self.middleNameInitials)):
             return False
+        return True
 
     @staticmethod
     def getInitialsFromString(str):

@@ -10,6 +10,8 @@ from DevelopmentSets.citationRecognitionBiologySet981 import sampleBiologyCitati
 from DevelopmentSets.citationRecognitionSociologySet711 import sampleSociologyCitations
 from DevelopmentSets.citationRecognitionMathSet701 import sampleMathCitations
 
+from People.ContributorsDB import ContributorsDB
+
 from Utils.timeUtils import getStringTimestamp
 from Utils.textProcUtils import capitalizeFirstLetterEachWord, escapeDoubleQuotes
 
@@ -33,24 +35,11 @@ cd C:/Users/pvdon/documents/research/articlesproc/articlesproc
 python articlesproc.py
 """
 
-print(len(sampleMathCitations))
-multipleYearsCount = 0
-noYearsCount = 0
-for raw in sampleMathCitations[::20][100:120]:
+for raw in sampleBiologyCitations:
     citation = Citation(raw)
-#    if len(citation.getYear()) > 1:
-#        multipleYearsCount += 1
-#    elif not citation.getYear():
-#        noYearsCount += 1
-#print('multiple years count:', multipleYearsCount)
-#print('no years count:', noYearsCount)
-    if citation.getNameList()[1]:
-        print(raw[:115])
-        print([str(name) for name in citation.getNames()])
-        print()
-
-
-
+    citation.record()
+    #citation.getArticle().print()
+ContributorsDB().print()
 
 #with CoreNLPClient(annotators=['tokenize', 'ssplit', 'parse'], be_quiet=True, memory='16G', threads=8, timeout=240000) as client:
 def getSampleOfRawCitations(articles):

@@ -4,12 +4,22 @@ from Citations.citationRegexes import styleGuideRegexes, \
                                       getParts
 from Utils.regexes import regexes
 from People.Name import Name
+from People.Contributor import Contributor
+from People.ContributorsDB import ContributorsDB
+from Articles.Article import Article
+import datetime
 
 class Citation(object):
     """Store and process string references (sources cited in articles)"""
+    countYearAmbiguous = 0
+    countYearNotGiven = 0
     def __init__(self, raw):
         '''Stores the raw string of this citation.'''
         self.raw = raw
+    def record(self):
+        '''Stores information extracted from this citation in 
+        the global scope.'''
+        ContributorsDB().registerArticle(self.getArticle())
     def __str__(self):
         '''Returns the string representation of this Citation.'''
         return self.raw
@@ -46,10 +56,10 @@ class Citation(object):
             ]
         try:
             nameRegexesInNameList.remove('name')
-        except: pass
+        except ValueError: pass
         try:
             nameRegexesInNameList.remove('initial')
-        except: pass
+        except ValueError: pass
         # get matches with those regexes
         nl = nameList[1].group(0)
         while len(nl) > 1:
@@ -73,6 +83,42 @@ class Citation(object):
                 middleNameInitials=parts['middleNameInitials']
                 ) 
             for parts in namePartses
+            if parts['surname']
             ]
     def getYear(self):
-        return [groups[0] for groups in re.findall(regexes['citable year'], self.raw)]
+        # contained by parentheses
+        years = getCitableYearsFromString(r'([^\da-zA-Z]\(', r'[a-z]\)[^\da-zA-Z])', self.raw)
+        if not years:
+            # in its own sentence
+            years = getCitableYearsFromString(r'([^a-z,] ', r'\.(( )|$))', self.raw)
+        if not years:
+            # in its own word
+            years = getCitableYearsFromString(r'(\b', r'\b)', self.raw)
+        if not years:
+            # at least not combined with another number
+            years = getCitableYearsFromString(r'(([^0-9]|^)', r'([^0-9]|$))', self.raw)
+        if years and max(years) != years[0] or (
+            bool(getCitableYearsFromString(r'([^\da-zA-Z]\(', r'[a-z]\)[^\da-zA-Z])', self.raw)) and 
+            bool(getCitableYearsFromString(r'([^a-z] ', r'\.(( )|$))', self.raw))
+            ):
+            Citation.countYearAmbiguous += 1
+        try:
+            return years[0]
+        except IndexError:
+            Citation.countYearNotGiven += 1
+            return None
+    def getArticle(self):
+        return Article(
+            properties={'citation':self},
+            contributors=[Contributor.make(name) for name in self.getNames()],
+            publicationYear=self.getYear()
+            )
+
+def getCitableYearsFromString(frontRe, backRe, string):
+    return [
+        int(re.search(r'\d+', result[0]).group()) 
+        for result in re.findall(
+            frontRe + regexes['citable year'] + backRe, string
+            ) 
+        if int(re.search(r'\d+', result[0]).group())  <= int(datetime.datetime.now().year)
+        ]

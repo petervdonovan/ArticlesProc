@@ -53,6 +53,12 @@
     <Compile Include="DevelopmentSets\citationRecognitionSociologySet711.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="People\Contributor.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="People\ContributorsDB.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="People\Name.py">
       <SubType>Code</SubType>
     </Compile>
@@ -72,6 +78,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="StatsAndVisualization\statsUtils.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utils\search.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils\textProcUtils.py">
