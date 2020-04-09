@@ -34,12 +34,14 @@ C:/Users/pvdon/.virtualenvs/env-64bit/Scripts/activate
 cd C:/Users/pvdon/documents/research/articlesproc/articlesproc
 python articlesproc.py
 """
-articles = ArticleSetBuilder(None).retrieveArticlesFromPickle('FULL_ARTICLE_SET_STABLE_IDS').getArticles()
-for article in sample(articles, 100):
-    for citation in article.getCitations():
-        citation.record()
-        print(citation.raw)
-    #citation.getArticle().print()
+#articles = ArticleSetBuilder(None).retrieveArticlesFromPickle('FULL_ARTICLE_SET_STABLE_IDS').getArticles()
+#for article in sample(articles, 100):
+#    for citation in article.getCitations():
+#        citation.record()
+#        print(citation.raw)
+#    #citation.getArticle().print()
+#ContributorsDB().pickle()
+ContributorsDB().getFromPickle('ContributorsDB_08-Apr-2020 (22_45)')
 ContributorsDB().print()
 
 #with CoreNLPClient(annotators=['tokenize', 'ssplit', 'parse'], be_quiet=True, memory='16G', threads=8, timeout=240000) as client:

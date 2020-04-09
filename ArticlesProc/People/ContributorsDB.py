@@ -1,9 +1,12 @@
 from Utils.search import searchWithGuess
+from Utils.timeUtils import getStringTimestamp
+import pickle
 
 class ContributorsDB:
     """A singleton contributors registration system, documenting
     all known contributors (people who write Articles) in one 
     place."""
+
     class __ContributorsDB:
         '''The private single instance of the Contributors 
         registration system.'''
@@ -95,3 +98,14 @@ class ContributorsDB:
     def print(self):
         for contributor in ContributorsDB.instance.db:
             print(contributor)
+    def pickle(self, fileName='ContributorsDB'):
+        dbfile = open(fileName + "_" + getStringTimestamp(), 'ab')
+        pickle.dump(ContributorsDB.instance.db, dbfile)
+        print("data dumped to", fileName + "_" + getStringTimestamp())
+        dbfile.close()
+    def getFromPickle(self, fileName):
+        '''Gets the Contributors database from a pickle file and 
+        stores it in the singleton instance.'''
+        dbfile = open(fileName, 'rb')
+        db = pickle.load(dbfile)
+        ContributorsDB.instance.db = db
