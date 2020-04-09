@@ -197,7 +197,7 @@ class RealArticle(Article):
             for citation in self.getRootElement().iter('mixed-citation'):
                 simplifiedCitationRaw = stripMarkup(ET.tostring(citation, encoding='unicode')).strip()
                 simplifiedCitationRaw = replaceWhiteSpaceWithSpace(simplifiedCitationRaw)
-                self.properties['citations'].append( Citation(simplifiedCitationRaw) )
+                self.properties['citations'].append( Citation(simplifiedCitationRaw, self) )
         return self.properties['citations']
     def getStyleGuides(self):
         '''Gets a set of all the style guides that appear in the citations list.'''

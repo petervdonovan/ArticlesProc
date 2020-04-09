@@ -4,8 +4,6 @@ class Article(object):
     def __init__(self, properties=None, contributors=None, publicationYear=None):
         '''Initializes an Article with a title and contributors that are 
         gotten from... somewhere'''
-        self.articlesThatCiteThis = []
-        '''The list of articles that cite this article.'''
         self.properties = dict()
         if properties:
             self.properties = properties
@@ -58,21 +56,26 @@ class Article(object):
                 return False
         return True
     def getEtAl(self):
-        if self.getCitation() is None:
+        '''Returns whether there may be other Contributors not included in
+        the Contributors list that is returned by self.getContributors()'''
+        if not self.getSelfCitation():
             return False
-        return 'et al' in self.getCitation().raw.lower()
-    def getCitation(self):
+        return 'et al' in self.getSelfCitation().raw.lower()
+    def getSelfCitation(self):
+        '''Get the citation from which information about this Article came.'''
         if not 'citation' in self.properties:
             return None
         return self.properties['citation']
     def addArticleThatCitesThis(self, additionalArticle):
         '''add an article to the list of articles that cite this article iff 
         that article is not already in the list'''
-        for article in self.articlesThatCiteThis:
+        if not 'articlesThatCiteThis' in self.properties:
+            self.properties['articlesThatCiteThis'] = []
+        for article in self.properties['articlesThatCiteThis']:
             #Check if same id article already exists
             if article.id == additionalArticle.id:
                 return
-        self.articlesThatCiteThis.append(additionalArticle)
+        self.properties['articlesThatCiteThis'].append(additionalArticle)
     def getId(self):
         return self.properties['id']
     def setDiscipline(self, discipline):
@@ -122,4 +125,3 @@ class Article(object):
             for contributor in self.getContributors():
                 print(contributor)
         print()
-

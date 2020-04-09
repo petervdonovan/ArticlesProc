@@ -13,9 +13,13 @@ class Citation(object):
     """Store and process string references (sources cited in articles)"""
     countYearAmbiguous = 0
     countYearNotGiven = 0
-    def __init__(self, raw):
-        '''Stores the raw string of this citation.'''
+    def __init__(self, raw, parentArticle):
+        '''Stores basic information about the citation, from which other
+        information will be derived.'''
         self.raw = raw
+        '''The raw string of this citation.'''
+        self.parentArticle = parentArticle
+        '''The article in which this Citation appeared.'''
     def record(self):
         '''Stores information extracted from this citation in 
         the global scope.'''
@@ -109,11 +113,13 @@ class Citation(object):
             Citation.countYearNotGiven += 1
             return None
     def getArticle(self):
-        return Article(
+        article = Article(
             properties={'citation':self},
             contributors=[Contributor.make(name) for name in self.getNames()],
             publicationYear=self.getYear()
             )
+        article.addArticleThatCitesThis(self)
+        return article
 
 def getCitableYearsFromString(frontRe, backRe, string):
     return [

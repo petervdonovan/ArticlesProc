@@ -34,10 +34,11 @@ C:/Users/pvdon/.virtualenvs/env-64bit/Scripts/activate
 cd C:/Users/pvdon/documents/research/articlesproc/articlesproc
 python articlesproc.py
 """
-
-for raw in sampleBiologyCitations:
-    citation = Citation(raw)
-    citation.record()
+articles = ArticleSetBuilder(None).retrieveArticlesFromPickle('FULL_ARTICLE_SET_STABLE_IDS').getArticles()
+for article in sample(articles, 100):
+    for citation in article.getCitations():
+        citation.record()
+        print(citation.raw)
     #citation.getArticle().print()
 ContributorsDB().print()
 
