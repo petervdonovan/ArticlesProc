@@ -38,10 +38,15 @@ class Article(object):
         '''Checks if two articles are similar (and therefore should have same id)'''
         if isinstance(other, Article):
             # Check if contributor lists are consistent
-            if self.getContributors() and other.getContributors() and not (
+            if self.getContributors() and other.getContributors() and (
+                not (
                 set(self.getContributors()) == set(other.getContributors()) or 
                 self.getEtAl() and set(self.getContributors()).issubset(other.getContributors()) or
                 other.getEtAl() and set(other.getContributors()).issubset(self.getContributors())
+                ) or
+                not (
+                    self.getPrimaryContributor() == other.getPrimaryContributor()
+                )
                 ):
                 return False
             # Check if publication years are consistent
@@ -102,6 +107,13 @@ class Article(object):
         if 'contributors' in self.properties:
             return self.properties['contributors']
         else:
+            return None
+    def getPrimaryContributor(self):
+        try:
+            return self.getContributors()[0]
+        except IndexError:
+            return None
+        except TypeError:
             return None
     def print(self):
         print('{}: ARTICLE PUBLISHED IN {}'.format(self.id, self.getPublicationYear()))

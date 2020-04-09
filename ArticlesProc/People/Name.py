@@ -10,11 +10,11 @@ class Name(object):
         '''The first letter of every word in the given name.'''
         self.middleNameInitials = middleNameInitials
         '''The first letter of every word in the middle name.'''
-        self.setGivenName(givenName)
+        self.setGivenName(givenName.lower().capitalize())
         '''The given name (also called the first name).'''
-        self.setMiddleName(middleName)
+        self.setMiddleName(middleName.lower().capitalize())
         '''The given name (also called the first name).'''
-        self.surname = surname
+        self.surname = surname.lower().capitalize()
         '''The surname (also called the last name).'''
     def getAsTuple(self):
         return (tuple(self.givenNameInitials), self.givenName, 

@@ -125,7 +125,7 @@ nameListRegexes['harvard name list'] = r'(' + nameRegexes['surname, initials wit
 #    + r'|' + nameRegexes['surname, given name and optionally middle initial'] + r')'
 #Non-style-guide-specific nameLists
 nameListRegexes['with semicolons'] = r'(' + nameRegexes['surname, initials with dot space optional'] + '(; ' + nameRegexes['surname, initials with dot space optional'] + r')*(, ((and)|e|y) ' + nameRegexes['surname, initials with dot space optional'] + r')?)'
-nameListRegexes['pure surname initials'] = r'((' + nameRegexes['surname, initials'] + r',? )+)'
+nameListRegexes['pure surname initials'] = r'((' + nameRegexes['surname, initials with dot optional space optional'] + r',? )+)'
 nameListRegexes['pure surname initials no dots no spaces'] = r'((' + nameRegexes['surname, initial(s) no dots no spaces'] + r'(,|(\.))? (and )?)+(et al.)?)'
 nameListRegexes['pure initials surname with dots'] = r'((' + nameRegexes['initials with dot surname'] + r'(,|(\.))?( ((and)|e|y))? )+(et al.)?)'
 nameListRegexes['surname initials then initials surname'] = r'(' + nameRegexes['surname, initials with dot'] + r'(, ' + nameRegexes['initials with dot space surname'] + r')*' + r'(,? ((and)|e|y) ' + nameRegexes['initials with dot space surname'] + r')?)'

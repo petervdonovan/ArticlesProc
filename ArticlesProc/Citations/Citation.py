@@ -44,7 +44,8 @@ class Citation(object):
                 longestMatch = match
         return longestMatch
     def getNames(self):
-        '''Returns a list of names that appear in the citation.'''
+        '''Returns a list of contributor names that appear in the 
+        citation, in order of appearance in the citation.'''
         # Get namelist
         nameList = self.getNameList()
         # get the upper-level nameregexes that appear in the namelist

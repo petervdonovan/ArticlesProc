@@ -85,7 +85,7 @@ class ContributorsDB:
         the contributors to the Article.'''
         contributors = article.getContributors()
         for contributor in contributors:
-            if contributor.name.surname == 'Almeida':
+            if contributor.name.surname == 'Boutilier':
                 print(article)
             contributor.addArticle(article)
             self.registerContributor(contributor)
