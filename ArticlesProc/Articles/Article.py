@@ -10,13 +10,20 @@ class Article(object):
         if properties:
             self.properties = properties
         '''Dictionary containing found properties of the article -- to be filled in lazily as specific properties are requested.'''
-        self.properties['id'] = Article.id
-        '''The unique id of this article.'''
+        if not 'id' in self.properties:
+            self.properties['id'] = Article.id
+            '''The unique id of this article.'''
         if contributors is not None:
             self.properties['contributors'] = contributors
         if publicationYear is not None:
             self.properties['publicationYear'] = publicationYear
         Article.id += 1
+    def __str__(self):
+        return (
+            'Article #' + str(self.getId()) + ', published in ' + 
+            str(self.getPublicationYear()) + ' by ' + 
+            ', '.join(str(contributor) for contributor in self.getContributors())
+            )
     def getTitle(self):
         '''Gets the title of this article, if the title is known.'''
         if not 'title' in self.properties:
