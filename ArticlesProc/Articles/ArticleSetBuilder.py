@@ -6,15 +6,15 @@ import time
 from Articles.RealArticle import RealArticle
 from Articles.ArticleSet import ArticleSet
 
-def getSummaryFromPickle(fileName, client):
+def getSummaryFromPickle(fileName):
     '''Simple out-of-box function that uses the ArticleSetBuilder to show data from a pickle.'''
-    articles = ArticleSetBuilder(client).retrieveArticlesFromPickle(fileName).getArticles()
+    articles = ArticleSetBuilder().retrieveArticlesFromPickle(fileName).getArticles()
     articleSet = ArticleSet(articles)
     articleSet.getData()
     articleSet.makeHists()
-def getSummaryAndPickleFromXML(client, startIndex=0, endIndex=0, sampleSize=-1, folderName="dataset"):
+def getSummaryAndPickleFromXML(startIndex=0, endIndex=0, sampleSize=-1, folderName="dataset"):
     '''Simple out-of-box function that uses the ArticleSetBuilder to show and store data from a folder of XML files.'''
-    articles = ArticleSetBuilder(client).retrieveArticlesFromXML(startIndex=startIndex, endIndex=endIndex, sampleSize=sampleSize, folderName = folderName).getArticles()
+    articles = ArticleSetBuilder().retrieveArticlesFromXML(startIndex=startIndex, endIndex=endIndex, sampleSize=sampleSize, folderName = folderName).getArticles()
     articleSet = ArticleSet(articles)
     print("Beginning to evaluate all data")
     startTime = time.time()
@@ -32,10 +32,9 @@ def getSummaryAndPickleFromXML(client, startIndex=0, endIndex=0, sampleSize=-1, 
 
 class ArticleSetBuilder(object):
     """Accesses the file system of the computer to pull article data use it to create Articles."""
-    def __init__(self, client):
+    def __init__(self):
         self.articles = set()
         '''The articles found by this article set builder.'''
-        self.client = client
     def retrieveArticlesFromXML(self, startIndex=0, endIndex=0, sampleSize=-1, folderName=None):
         '''Retrieves Articles from their original XML files.'''
         if not folderName:
@@ -49,9 +48,9 @@ class ArticleSetBuilder(object):
             endIndex = len(metadataNames)
         metadataNames = metadataNames[startIndex:endIndex]
         if sampleSize != -1:
-            metadataNames = metadataNames[::int(metadataNames / sampleSize)]
+            metadataNames = metadataNames[::int(len(metadataNames) / sampleSize)]
         for metadataName in metadataNames:
-            self.articles.add(RealArticle.initFromFile(path, metadataName, self.client))
+            self.articles.add(RealArticle.initFromFile(path, metadataName))
             if len(self.articles) % 10 == 0:
                 print(len(self.articles), metadataName)
         return self
@@ -63,7 +62,7 @@ class ArticleSetBuilder(object):
             dbfile = open(fileName, 'rb')
             db = pickle.load(dbfile)
             for articleRaw in db:
-                self.articles.add(RealArticle.initFromRaw(articleRaw, client=self.client))
+                self.articles.add(RealArticle.initFromRaw(articleRaw))
         return self
     def getArticles(self):
         return self.articles

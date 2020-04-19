@@ -118,7 +118,7 @@ class Citation(object):
             contributors=[Contributor.make(name) for name in self.getNames()],
             publicationYear=self.getYear()
             )
-        article.addArticleThatCitesThis(self)
+        article.addArticleThatCitesThis(self.parentArticle)
         return article
 
 def getCitableYearsFromString(frontRe, backRe, string):

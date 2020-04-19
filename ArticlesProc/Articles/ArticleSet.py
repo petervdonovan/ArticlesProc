@@ -83,10 +83,15 @@ class ArticleSet(object):
             ])
         return self.descriptiveStatistics
     def pickleAllArticles(self, fileName="dataset"):
-        dbfile = open(fileName + "_" + getStringTimestamp(), 'ab')
-        pickle.dump([article.getSaveableData() for article in self.articles], dbfile)
-        print("data dumped to", fileName + "_" + getStringTimestamp())
-        dbfile.close()
+        '''Pickles all articles as their tuple representation.'''
+        with open(fileName + "_" + getStringTimestamp(), 'ab') as file:
+            pickle.dump([article.getSaveableData() for article in self.articles], file)
+            print("data dumped to", fileName + "_" + getStringTimestamp())
+    def pickleSelf(self, fileName="dataset"):
+        '''Pickles the ArticleSet'''
+        with open(fileName + "_" + getStringTimestamp(), 'ab') as file:
+            pickle.dump(self, file)
+            print("data dumped to", fileName + "_" + getStringTimestamp())
     def makeHists(self, bins=20):
         # Create the chart
         fig, ax1 = plt.subplots(4)

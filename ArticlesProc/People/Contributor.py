@@ -1,6 +1,14 @@
 from Articles.ArticleSet import ArticleSet
 from People.ContributorsDB import ContributorsDB
+from People.Name import Name
 
+def sameContributor(name, otherName):
+    '''Returns True iff two names correspond to the same Contributor.'''
+    if not ContributorsDB().get(name):
+        Contributor.make(name)
+    if not ContributorsDB().get(otherName):
+        Contributor.make(otherName)
+    return ContributorsDB().get(name) == ContributorsDB().get(otherName)
 class Contributor(object):
     """Describes a person who contributes to one
     or more Articles."""
@@ -41,6 +49,9 @@ class Contributor(object):
         that of another (presumably because it turns out 
         that they are the same person).'''
         self.articles = self.articles + other.articles
+    def getArticles(self):
+        '''Returns the Articles attributed to this Contributor.'''
+        return self.articles
     def isEquivalent(self, other):
         return (self.name.contains(other.name) or 
                 other.name.contains(self.name))

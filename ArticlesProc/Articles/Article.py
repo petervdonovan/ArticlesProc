@@ -1,3 +1,5 @@
+from People.Contributor import sameContributor
+
 class Article(object):
     """Describes both real and virtual articles."""
     id = 0
@@ -32,18 +34,37 @@ class Article(object):
         if not 'publicationYear' in self.properties:
             return None
         return self.properties['publicationYear']
+    def contributorsAreSubsetOfOtherContributors(self, other):
+        '''Returns True iff this article's contributors are a subset of another 
+        article's contributors, without registering new Contributors unnecessarily.'''
+        if not self.getContributorNames(): return True
+        if not other.getContributorNames(): return False
+        for name in self.getContributorNames():
+            found = False
+            for otherName in other.getContributorNames():
+                if sameContributor(name, otherName):
+                    found = True
+                    break
+            if not found:
+                return False
+        return True
+    def contributorsAreOtherContributors(self, other):
+        '''Returns True iff this Article has the same Contributors as another Article,
+        without registering new Contributors unnecessarily.'''
+        return self.contributorsAreSubsetOfOtherContributors(other) and \
+              other.contributorsAreSubsetOfOtherContributors(self)
     def isEquivalent(self, other):
         '''Checks if two articles are similar (and therefore should have same id)'''
         if isinstance(other, Article):
             # Check if contributor lists are consistent
-            if self.getContributors() and other.getContributors() and (
+            if self.getContributorNames() and other.getContributorNames() and (
                 not (
-                set(self.getContributors()) == set(other.getContributors()) or 
-                self.getEtAl() and set(self.getContributors()).issubset(other.getContributors()) or
-                other.getEtAl() and set(other.getContributors()).issubset(self.getContributors())
+                self.contributorsAreSubsetOfOtherContributors(other) or 
+                self.getEtAl() and self.contributorsAreSubsetOfOtherContributors(other) or
+                other.getEtAl() and other.contributorsAreSubsetOfOtherContributors(self)
                 ) or
                 not (
-                    self.getPrimaryContributor() == other.getPrimaryContributor()
+                    sameContributor(self.getPrimaryContributorName(), other.getPrimaryContributorName())
                 )
                 ):
                 return False
@@ -111,9 +132,24 @@ class Article(object):
             return self.properties['contributors']
         else:
             return None
+    def getContributorNames(self):
+        '''Return the names of the Contributors to this Article.'''
+        names = []
+        for contributor in self.getContributors():
+            names.append(contributor.name)
+            return names
     def getPrimaryContributor(self):
         try:
             return self.getContributors()[0]
+        except IndexError:
+            return None
+        except TypeError:
+            return None
+    def getPrimaryContributorName(self):
+        '''Returns the name of the first contributor listed in the source from
+        which this Article was derived.'''
+        try:
+            return self.getContributorNames()[0]
         except IndexError:
             return None
         except TypeError:
