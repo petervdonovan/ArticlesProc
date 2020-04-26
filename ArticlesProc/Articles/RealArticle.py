@@ -14,6 +14,7 @@ from guess_language import guess_language
 
 import stanfordnlp.server.client
 import requests.exceptions
+import time
 #from nltk.tokenize import sent_tokenize, word_tokenize
 
 class RealArticle(Article):
@@ -186,9 +187,13 @@ class RealArticle(Article):
         if 'contributors' in self.properties:
             del self.properties['contributors']
         for contributor in self.getContributors():
+            t0 = time.time()
             ContributorsDB().registerContributor(contributor)
+            print('Time to registerContributor:', time.time() - t0)
         for citation in self.getCitations():
+            t0 = time.time()
             citation.record()
+            print('Time to record citation:', time.time() - t0)
     def getContributors(self):
         if not 'contributors' in self.properties:
             contributorsList = []

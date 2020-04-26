@@ -22,7 +22,7 @@ class NLPClient:
     def __init__(self):
         '''Creates the client if the client has not been created yet.'''
         if NLPClient.client is None:
-            NLPClient.client = CoreNLPClient(annotators=['tokenize', 'ssplit', 'parse'], be_quiet=True, memory='16G', threads=8, timeout=240000)
+            NLPClient.client = CoreNLPClient(annotators=['tokenize', 'ssplit', 'parse'], be_quiet=True, memory='16G', threads=6, timeout=240000)
     def annotate(self, str):
         '''Returns the annotated text.'''
         return NLPClient.client.annotate(str)

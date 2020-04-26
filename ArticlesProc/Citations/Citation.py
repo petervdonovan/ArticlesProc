@@ -78,7 +78,7 @@ class Citation(object):
             nl = nl[1:]
         # Get namepartses
         namePartses = [getParts(name[0], name[1]) for name in names]
-        # convert namepartses in to Names and return
+        # convert namepartses into Names and return
         return [
             Name(
                 surname=parts['surname'], 

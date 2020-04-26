@@ -1,5 +1,6 @@
 from Utils.search import searchWithGuess
 from Utils.timeUtils import getStringTimestamp
+from People.Name import Name
 import pickle
 
 class ContributorsDB:
@@ -88,11 +89,10 @@ class ContributorsDB:
         the contributors to the Article.'''
         contributors = article.getContributors()
         for contributor in contributors:
-            if contributor.name.surname == 'Boutilier':
-                print(article)
             contributor.addArticle(article)
             self.registerContributor(contributor)
     def get(self, name):
+        assert(type(name) == Name)
         result = ContributorsDB.instance.get(name)
         return result
     def print(self):

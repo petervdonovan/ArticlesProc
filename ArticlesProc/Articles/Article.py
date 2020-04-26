@@ -1,4 +1,5 @@
 from People.Contributor import sameContributor
+from People.Name import Name
 
 class Article(object):
     """Describes both real and virtual articles."""
@@ -107,6 +108,9 @@ class Article(object):
         except:
             return None
     def add(self, other):
+        '''Returns the combination of the contents of two Articles.
+        TODO: REVIEW IMPLEMENTATION FOR EQUALITIES THAT ARE NOT RECOGNIZED AS 
+        EQUALITIES AND FOR UNHANDLED DATA TYPES.'''
         properties = dict()
         for prop in self.properties:
             if prop not in other.properties:
@@ -114,9 +118,14 @@ class Article(object):
             elif self.properties[prop] == other.properties[prop]:
                 properties[prop] = self.properties[prop]
             else:
-                try:
+                if type(self.properties[prop]) == set:
                     properties[prop] = set(self.properties[prop]).union(other.properties[prop])
-                except TypeError:
+                elif type(self.properties[prop]) == list:
+                    properties[prop] = self.properties[prop] + [
+                        otherItem for otherItem in other.properties[prop] 
+                        if otherItem not in self.properties[prop]
+                        ]
+                else:
                     properties[prop] = self.properties[prop]
         self.properties = properties
     def getSaveableData(self):
@@ -149,10 +158,14 @@ class Article(object):
         '''Returns the name of the first contributor listed in the source from
         which this Article was derived.'''
         try:
-            return self.getContributorNames()[0]
+            name = self.getContributorNames()[0]
+            assert(type(name) == Name)
+            return name
         except IndexError:
+            print(type(self))
             return None
         except TypeError:
+            print(type(self))
             return None
     def print(self):
         print('{}: ARTICLE PUBLISHED IN {}'.format(self.id, self.getPublicationYear()))
