@@ -187,9 +187,7 @@ class RealArticle(Article):
         if 'contributors' in self.properties:
             del self.properties['contributors']
         for contributor in self.getContributors():
-            t0 = time.time()
             ContributorsDB().registerContributor(contributor)
-            print('Time to registerContributor:', time.time() - t0)
         for citation in self.getCitations():
             t0 = time.time()
             citation.record()

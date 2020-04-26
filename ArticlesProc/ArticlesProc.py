@@ -66,23 +66,27 @@ def storeContributorAndArticleDataFromXML(folderName, dbName, sampleSize=-1):
     timesToEvaluateProperties = []
     articles = ArticleSetBuilder().retrieveArticlesFromXML(sampleSize=sampleSize, folderName=folderName).getArticles()
     count = 0
+    tstart = time.time()
     for article in articles:
         print(count, "Article id", article.getId())
         count += 1
         lastTime = time.time()
         article.recordContributors()
+        if time.time() - lastTime > 1:
+            print('Article at', article.getFullPath(), 'took over 1 second to record contributors')
         timesToRecordContributors.append(time.time() - lastTime)
         print('Time to record contributors:', time.time() - lastTime)
-        lastTime = time.time()
-        article.evaluateProperties()
-        timesToEvaluateProperties.append(time.time() - lastTime)
-        print('Time to evaluate properties:', time.time() - lastTime)
-    print("mean record contributors time: ", sum(timesToRecordContributors) / len(timesToRecordContributors))
-    print("mean evaluate properties time: ", sum(timesToEvaluateProperties) / len(timesToEvaluateProperties))
-    ArticleSet(articles).pickleSelf(fileName=dbName)
+        #lastTime = time.time()
+        #article.evaluateProperties()
+        #timesToEvaluateProperties.append(time.time() - lastTime)
+        #print('Time to evaluate properties:', time.time() - lastTime)
+    print('Total time:', time.time() - tstart)
+    # print("mean record contributors time: ", sum(timesToRecordContributors) / len(timesToRecordContributors))
+    # print("mean evaluate properties time: ", sum(timesToEvaluateProperties) / len(timesToEvaluateProperties))
+    # ArticleSet(articles).pickleSelf(fileName=dbName)
     ContributorsDB().pickle(fileName=dbName)
 
-storeContributorAndArticleDataFromXML('receipt-id-1423981-part-001 (biology)', 'biology_high_recursion_allowable_test', sampleSize=100)
+storeContributorAndArticleDataFromXML('receipt-id-1423981-part-001 (biology)', 'biology_high_recursion_allowable_test', sampleSize=33)
 #for article in ArticleSetBuilder(None).retrieveArticlesFromPickle('20_article_sample_18-Apr-2020 (17_41)').getArticles():
 #    print(article.getFullPath())
 #    print(article.properties)
