@@ -62,7 +62,7 @@ class ContributorsDB:
             it with an existing Contributor if possible.'''
             idx = self.search(contributor.name)
             if int(idx) == idx:
-                if True:#contributor is not self.db[idx]:
+                if contributor is not self.db[idx]:
                     self.db[idx].add(contributor)
             else:
                 idx +=1

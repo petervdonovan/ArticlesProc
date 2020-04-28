@@ -336,7 +336,10 @@ class RealArticle(Article):
         return self.getMeanNodesPerSentence(r'PP')
     def getCitationsCount(self):
         '''Returns the number of citations in the references list of the article.'''
-        return len(self.citations)
+        try:
+            return len(self.getCitations())
+        except TypeError:
+            return 0
     def conditionallyEraseAbstract(self):
         '''Erases the abstract if the needed information as already been 
         gotten from it.'''

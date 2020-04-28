@@ -40,13 +40,19 @@ C:/Users/pvdon/.virtualenvs/env-64bit/Scripts/activate
 cd C:/Users/pvdon/documents/research/articlesproc/articlesproc
 python articlesproc.py
 """
+
+"""
+C:/Users/Peter/.virtualenvs/nlp64/Scripts/activate
+cd C:/Users/Peter/documents/research/articlesproc/articlesproc
+python articlesproc.py
+"""
 def getSampleOfRawCitations(articles):
     for article in articles:
         for citation in article.getCitations():
             print('"' + escapeDoubleQuotes(str(citation)) + '", ')
 
 def getContributorsDBSample(sampleSize=100):
-    articles = ArticleSetBuilder(None).retrieveArticlesFromPickle('FULL_ARTICLE_SET_STABLE_IDS').getArticles()
+    articles = ArticleSetBuilder().retrieveArticlesFromPickle('FULL_ARTICLE_SET_STABLE_IDS').getArticles()
     for article in sample(articles, sampleSize):
         article.recordContributors()
         #citation.getArticle().print()
@@ -86,7 +92,7 @@ def storeContributorAndArticleDataFromXML(folderName, dbName, sampleSize=-1):
     # ArticleSet(articles).pickleSelf(fileName=dbName)
     ContributorsDB().pickle(fileName=dbName)
 
-storeContributorAndArticleDataFromXML('receipt-id-1423981-part-001 (biology)', 'biology_high_recursion_allowable_test', sampleSize=33)
+storeContributorAndArticleDataFromXML('biology', 'biology_high_recursion_allowable_test')
 #for article in ArticleSetBuilder(None).retrieveArticlesFromPickle('20_article_sample_18-Apr-2020 (17_41)').getArticles():
 #    print(article.getFullPath())
 #    print(article.properties)

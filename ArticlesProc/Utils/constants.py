@@ -1,0 +1,1 @@
+pathToArticleData = "C:\\Users\\Peter\\Documents\\Research"
