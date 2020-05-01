@@ -90,7 +90,7 @@ class Article(object):
             return None
         return self.properties['citation']
     def addArticleThatCitesThis(self, additionalArticle):
-        '''add an article to the list of articles that cite this article iff 
+        '''Add an article to the list of articles that cite this article iff 
         that article is not already in the list'''
         if not 'articlesThatCiteThis' in self.properties:
             self.properties['articlesThatCiteThis'] = []
@@ -99,6 +99,16 @@ class Article(object):
             if article.id == additionalArticle.id:
                 return
         self.properties['articlesThatCiteThis'].append(additionalArticle)
+    def addArticleThatThisCites(self, additionalArticle):
+        '''Add an article to the list of articles that this article cites iff 
+        that article is not already in the list'''
+        if not 'articlesThatThisCites' in self.properties:
+            self.properties['articlesThatThisCites'] = []
+        for article in self.properties['articlesThatThisCites']:
+            #Check if same id article already exists
+            if article.id == additionalArticle.id:
+                return
+        self.properties['articlesThatThisCites'].append(additionalArticle)
     def getId(self):
         return self.properties['id']
     def setDiscipline(self, discipline):

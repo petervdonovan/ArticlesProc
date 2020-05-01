@@ -5,6 +5,7 @@ import time
 
 from Articles.RealArticle import RealArticle
 from Articles.ArticleSet import ArticleSet
+from Utils import constants as constants
 
 def getSummaryFromPickle(fileName):
     '''Simple out-of-box function that uses the ArticleSetBuilder to show data from a pickle.'''
@@ -39,7 +40,7 @@ class ArticleSetBuilder(object):
         '''Retrieves Articles from their original XML files.'''
         if not folderName:
             folderName = input("Folder name? ")
-        path = join("C:\\Users\\pvdon\\Documents\\Research", folderName, 'metadata')
+        path = join(constants.pathToArticleData, folderName, 'metadata')
         # Get all file names
         metadataNames = [f for f in listdir(path) if isfile(join(path, f))]
         #save metadata names to a pickle
