@@ -115,7 +115,7 @@ class Citation(object):
     def getArticle(self):
         article = Article(
             properties={'citation':self},
-            contributors=[Contributor.make(name) for name in self.getNames()],
+            contributors=[Contributor.make(name).name for name in self.getNames()],
             publicationYear=self.getYear()
             )
         article.addArticleThatCitesThis(self.parentArticle)

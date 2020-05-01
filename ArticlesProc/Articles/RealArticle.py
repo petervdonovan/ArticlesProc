@@ -189,17 +189,17 @@ class RealArticle(Article):
         for contributor in self.getContributors():
             ContributorsDB().registerContributor(contributor)
         for citation in self.getCitations():
-            t0 = time.time()
+            # t0 = time.time()
             citation.record()
-            print('Time to record citation:', time.time() - t0)
+            # print('Time to record citation:', time.time() - t0)
     def getContributors(self):
         if not 'contributors' in self.properties:
             contributorsList = []
             for name in self.getContributorNames():
                 contributor = Contributor.make(name, articles=ArticleSet(set([self])))
-                contributorsList.append(contributor)
+                contributorsList.append(contributor.name)
             self.properties['contributors'] = contributorsList
-        return self.properties['contributors']
+        return super().getContributors()
     def getContributorNames(self):
         '''Returns a list of Names of the contributors to the article.'''
         if not 'contributorNames' in self.properties:

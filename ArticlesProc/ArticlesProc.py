@@ -1,6 +1,6 @@
 import sys
 print('initial recursion depth limit:', sys.getrecursionlimit())
-sys.setrecursionlimit(100000)
+sys.setrecursionlimit(1000000)
 print('current recursion depth limit:', sys.getrecursionlimit())
 
 from Citations.Citation import Citation
@@ -65,7 +65,7 @@ def storeContributorAndArticleDataFromXML(folderName, dbName, sampleSize=-1):
     timesToRecordContributors = []
     timesToEvaluateProperties = []
     articles = ArticleSetBuilder().retrieveArticlesFromXML(sampleSize=sampleSize, folderName=folderName).getArticles()
-    count = 0
+    count = 1
     tstart = time.time()
     for article in articles:
         print(count, "Article id", article.getId())
@@ -76,17 +76,20 @@ def storeContributorAndArticleDataFromXML(folderName, dbName, sampleSize=-1):
             print('Article at', article.getFullPath(), 'took over 1 second to record contributors')
         timesToRecordContributors.append(time.time() - lastTime)
         print('Time to record contributors:', time.time() - lastTime)
-        #lastTime = time.time()
-        #article.evaluateProperties()
-        #timesToEvaluateProperties.append(time.time() - lastTime)
-        #print('Time to evaluate properties:', time.time() - lastTime)
+        lastTime = time.time()
+        article.evaluateProperties()
+        timesToEvaluateProperties.append(time.time() - lastTime)
+        print('Time to evaluate properties:', time.time() - lastTime)
+        # Attempt to pickle progress
+        if count % 100 == 0:
+            ContributorsDB().pickle(fileName='biology_test_dbs_10^6_recursion/' + dbName)
     print('Total time:', time.time() - tstart)
     # print("mean record contributors time: ", sum(timesToRecordContributors) / len(timesToRecordContributors))
     # print("mean evaluate properties time: ", sum(timesToEvaluateProperties) / len(timesToEvaluateProperties))
-    # ArticleSet(articles).pickleSelf(fileName=dbName)
     ContributorsDB().pickle(fileName=dbName)
+    ArticleSet(articles).pickleSelf(fileName=dbName)
 
-storeContributorAndArticleDataFromXML('receipt-id-1423981-part-001 (biology)', 'biology_high_recursion_allowable_test', sampleSize=33)
+storeContributorAndArticleDataFromXML('receipt-id-1423981-part-001 (biology)', 'biology_highmaxrecursion_full_db')
 #for article in ArticleSetBuilder(None).retrieveArticlesFromPickle('20_article_sample_18-Apr-2020 (17_41)').getArticles():
 #    print(article.getFullPath())
 #    print(article.properties)

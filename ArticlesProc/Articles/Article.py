@@ -1,4 +1,5 @@
 from People.Contributor import sameContributor
+from People.ContributorsDB import ContributorsDB
 from People.Name import Name
 
 class Article(object):
@@ -137,8 +138,9 @@ class Article(object):
         else:
             raise TypeError('The parameter \'raw\' must be a dictionary.')
     def getContributors(self):
+        '''Returns the people who contributed to this Article.'''
         if 'contributors' in self.properties:
-            return self.properties['contributors']
+            return [ContributorsDB().get(name) for name in self.properties['contributors']]
         else:
             return None
     def getContributorNames(self):

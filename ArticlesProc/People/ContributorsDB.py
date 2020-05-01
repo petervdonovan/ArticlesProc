@@ -62,7 +62,7 @@ class ContributorsDB:
             it with an existing Contributor if possible.'''
             idx = self.search(contributor.name)
             if int(idx) == idx:
-                if True:#contributor is not self.db[idx]:
+                if contributor is not self.db[idx]:
                     self.db[idx].add(contributor)
             else:
                 idx +=1
@@ -86,12 +86,12 @@ class ContributorsDB:
         may have more complete information about the person described.'''
         t0 = time.time()
         ContributorsDB.instance.add(contributor)
-        if time.time()-t0 < 0.001:
-            print('took a SHORT time to add to the ContributorsDB:')
-            print(self.get(contributor.name))
-        if time.time()-t0 > 0.1:
-            print('took a LONG time to add to the ContributorsDB:')
-            print(self.get(contributor.name))
+        # if time.time()-t0 < 0.001:
+        #     print('took a SHORT time to add to the ContributorsDB:')
+        #     print(self.get(contributor.name))
+        # if time.time()-t0 > 0.1:
+        #     print('took a LONG time to add to the ContributorsDB:')
+        #     print(self.get(contributor.name))
         print('Time to registerContributor:', time.time() - t0)
         return self.get(contributor.name)
     def registerArticle(self, article):
