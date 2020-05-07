@@ -57,24 +57,12 @@ class ArticleSet(object):
         '''Returns a DataFrame containing descriptive statistics.'''
         if self.descriptiveStatistics is None:
             self.descriptiveStatistics = pd.DataFrame([
-            [self.getData().loc[:,'Tokens'].size, self.getData().loc[:,'Parse Tree Levels'].size,
-                         self.getData().loc[:,'Dependent Clauses'].size, self.getData().loc[:,'Prepositional Phrases'].size],
-            
-            [self.getData().loc[:,'Tokens'].mean(), self.getData().loc[:,'Parse Tree Levels'].mean(),
-                         self.getData().loc[:,'Dependent Clauses'].mean(), self.getData().loc[:,'Prepositional Phrases'].mean()],
-            
-            [confidenceIntervalOfMean(self.getData().loc[:,'Tokens'], 0.05), confidenceIntervalOfMean(self.getData().loc[:,'Parse Tree Levels'], 0.05),
-                         confidenceIntervalOfMean(self.getData().loc[:,'Dependent Clauses'], 0.05), confidenceIntervalOfMean(self.getData().loc[:,'Prepositional Phrases'], 0.05)],
-
-            [self.getData().loc[:,'Tokens'].std(), self.getData().loc[:,'Parse Tree Levels'].std(),
-                         self.getData().loc[:,'Dependent Clauses'].std(), self.getData().loc[:,'Prepositional Phrases'].std()]
+            [data.size for (_, data) in self.getData().iteritems()],
+            [data.mean() for (_, data) in self.getData().iteritems()],
+            [confidenceIntervalOfMean(_, 0.05) for (name, data) in self.getData().iteritems()],
+            [data.std for (_, data) in self.getData().iteritems()]
             ],
-            columns=[
-                'Tokens',
-                'Parse Tree Levels',
-                'Dependent Clauses',
-                'Prepositional Phrases'
-            ],
+            columns=[name for (name, _) in self.getData().iteritems()],
             index=[
                 'n',
                 'mean',
@@ -93,47 +81,69 @@ class ArticleSet(object):
             pickle.dump(self, file)
             print("data dumped to", fileName + "_" + getStringTimestamp())
     def makeHists(self, bins=20):
+        '''Show frequency distributions of each calculated article characteristic.'''
         # Create the chart
-        fig, ax1 = plt.subplots(4)
-        fig.suptitle = "Article Set Summary"
-        ax1[0].hist(self.getData().loc[:,'Tokens'].tolist(), bins=bins)
-        ax1[1].hist(self.getData().loc[:,'Parse Tree Levels'].tolist(), bins=bins)
-        ax1[2].hist(self.getData().loc[:,'Dependent Clauses'].tolist(), bins=bins)
-        ax1[3].hist(self.getData().loc[:,'Prepositional Phrases'].tolist(), bins=bins)
+        fig, ax1 = plt.subplots(len(self.getData().columns))
+        title = "| "
+        count = 0
+        for (name, data) in self.getData().iteritems():
+            try:
+                ax1[count].hist(data.tolist(), bins=bins)
+            except TypeError:
+                ax1.hist(data.tolist(), bins=bins)
+            title += name + ' | '
+            count += 1
+        fig.suptitle = title
         plt.show()
     def thinOut(self):
         self.articles = [article for article in self.articles if article.hasValidAbstract()]
-    def getData(self, decimalPlaces=20, verbose=False):
+    def getData(self, decimalPlaces=20, verbose=False, simple=False):
         lastTimeCheck = time.time()
         table = [] # 2D list to be converted into a DataFrame
         index = [] # list of tuples to be converted into a MultiIndex to be used in the DataFrame
         if self.rawData is None:
             for article in self.articles:
-                if article.hasValidAbstract():
+                if (simple and article.getRawAbstract() is not None) or (not simple and article.hasValidAbstract()):
                     if verbose:
                         # Print out the data
                         print(article.getPath())
-                        print("\nTitle:", article.getTitle(),
-                      '\nAll of the following data is per sentence.',
-                      "\nMean tokens:", article.getTokensPerSentence())
-                        print(
-                      "Mean parse tree levels:", article.getMeanParseTreeLevels(),
-                      '\nMean dependent clauses:', article.getMeanDependentClauses(),
-                      '\nMean prepositional phrases:', article.getMeanPrepositionalPhrases())
-                        print("Time to get parse tree levels, dependent clauses, and prepositional phrases:", time.time() - lastTimeCheck)
-                    # Save the data for the current Article in the table
-                    table.append([
-                        round(article.getTokensPerSentence(), decimalPlaces),
-                        round(article.getMeanParseTreeLevels(), decimalPlaces),
-                        round(article.getMeanDependentClauses(), decimalPlaces),
-                        round(article.getMeanPrepositionalPhrases(), decimalPlaces)
-                        ])
+                        if not simple:
+                            print("\nTitle:", article.getTitle(),
+                          '\nAll of the following data is per sentence.',
+                          "\nMean tokens:", article.getTokensPerSentence())
+                            print(
+                          "Mean parse tree levels:", article.getMeanParseTreeLevels(),
+                          '\nMean dependent clauses:', article.getMeanDependentClauses(),
+                          '\nMean prepositional phrases:', article.getMeanPrepositionalPhrases())
+                            print("Time to get parse tree levels, dependent clauses, and prepositional phrases:", time.time() - lastTimeCheck)
+                    if not simple:
+                        # Calculate secondary Article characteristics
+                        lengthAdjustedSbar = article.getMeanDependentClauses() / article.getTokensPerSentence()
+                        lengthAdjustedPp = article.getMeanPrepositionalPhrases() / article.getTokensPerSentence()
+                        combinedAdjustedSbarPp = lengthAdjustedSbar + lengthAdjustedPp
+                        # Save the data for the current Article in the table
+                        table.append([
+                            round(article.getTokensPerSentence(), decimalPlaces),
+                            round(article.getMeanParseTreeLevels(), decimalPlaces),
+                            round(article.getMeanDependentClauses(), decimalPlaces),
+                            round(article.getMeanPrepositionalPhrases(), decimalPlaces),
+                            round(lengthAdjustedSbar, decimalPlaces),
+                            round(lengthAdjustedPp, decimalPlaces),
+                            round(combinedAdjustedSbarPp, decimalPlaces)
+                            ])
+                    else:
+                        table.append([
+                            round(article.getFullTokensPerSentence(), decimalPlaces)
+                            ])
                     # Create row in the index, if applicable
                     index.append(article.getId())
             #print("Time to process article:", time.time() - lastTimeCheck)
             lastTimeCheck = time.time()
             # Save all data to self.rawData as a DataFrame
-            columnNames = ['Tokens', 'Parse Tree Levels', 'Dependent Clauses', 'Prepositional Phrases']
+            if not simple:
+                columnNames = ['Tokens', 'Parse Tree Levels', 'Dependent Clauses', 'Prepositional Phrases', 'Length Adjusted SBAR', 'Length Adjusted PP', 'Combined Adjusted SBAR PP', 'Full Abstract Tokens']
+            else:
+                columnNames = ['Full Abstract Tokens']
             self.rawData = pd.DataFrame(table, index=index, columns=columnNames)
         if verbose: print('Count of invalid abstracts for unknown reason:', self.countOfInvalidForUnknownReason)
         return self.rawData

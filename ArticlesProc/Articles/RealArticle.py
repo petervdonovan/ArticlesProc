@@ -9,10 +9,11 @@ from Articles.Article import Article
 from Articles.ArticleSet import ArticleSet
 import statistics
 from Utils.textProcUtils import stripMarkup, replaceWhiteSpaceWithSpace, escapeDoubleQuotes
-from Utils.nlpUtils import countNodesThatMatchTag, getParseTreeLevels, NLPClient
-from guess_language import guess_language
+from Utils.nlpUtils import countNodesThatMatchTag, getParseTreeLevels, NLPClient, getEnglishSentences
 
 import stanfordnlp.server.client
+from nltk.tokenize import sent_tokenize, word_tokenize
+import statistics
 import requests.exceptions
 import time
 #from nltk.tokenize import sent_tokenize, word_tokenize
@@ -40,7 +41,6 @@ class RealArticle(Article):
         Article.__init__(self, properties=properties)
         # Load the title and contributors into properties
         self.getTitle()
-        self.getContributors()
     @classmethod
     def initFromFile(cls, rootFilePath, relativeFilePath):
         '''Factory method for initialization.'''
@@ -126,34 +126,12 @@ class RealArticle(Article):
         if self.getRawAbstract():
             return guess_language(self.getRawAbstract())
         return ''
-    @staticmethod
-    def getSentencesAnnotatedByLanguage(text):
-        '''Gets a list of ordered pairs of a string delimited by a possible sentence break and the language of that string, in the abstract.'''
-        pairs = []
-        if text:
-            for possibleSentence in re.split(r'\b\.\s+\b', text):
-                pairs.append((possibleSentence, guess_language(possibleSentence)))
-        return pairs
-    @staticmethod
-    def getSentencesWithPossibleMathFlagged(text, minLengthMostWords=2, maxProportionOfGroupingSymbols=0.25):
-        '''Gets a list of possible sentences, with possible sentences flagged if they possibly contain math.'''
-        pairs = []
-        if text:
-            for possibleSentence in re.split(r'\b\.\s+\b', text):
-                possibleMath = (
-                    bool(re.search(r'\+|=|(\b(x|y|z)\b)', possibleSentence)) or  #Check for math symbols
-                    statistics.mean([len(word) for word in re.split(r'\b', possibleSentence)]) < 2 or #check for very short words that might be variables
-                    len(re.findall(r'\)|\(|\[|\]|\|', possibleSentence)) / len(possibleSentence) > maxProportionOfGroupingSymbols or #Check for a high proportion of grouping symbols
-                    bool(re.search(r'\{|\}|(\$\\\[.*?\]\$)', possibleSentence))
-                    )
-                pairs.append((possibleSentence, possibleMath))
-        return pairs
+    
     def getAbstract(self):
         '''Returns the abstract of the article, or None if no abstract exists.'''
         if not self.abstract:
             # Get and processs stringAbstract
-            stringAbstract = '. '.join(sent for (sent, lang) in RealArticle.getSentencesAnnotatedByLanguage(self.getRawAbstract()) if lang == 'en') + '.'
-            stringAbstract = '. '.join(sent for (sent, possibleMath) in RealArticle.getSentencesWithPossibleMathFlagged(stringAbstract) if not possibleMath) + '.'
+            stringAbstract = getEnglishSentences(self.getRawAbstract())
             if len(stringAbstract) > RealArticle.MAX_ABSTRACT_LENGTH:
                 stringAbstract = stringAbstract[:RealArticle.MAX_ABSTRACT_LENGTH]
             # Try to annotate stringAbstract
@@ -301,7 +279,8 @@ class RealArticle(Article):
             self.properties['hasValidAbstract'] = bool(self.getAbstract())
         return self.properties['hasValidAbstract']
     def getTokensPerSentence(self):
-        '''Returns the mean number of tokens per sentence in the abstract.'''
+        '''Returns the mean number of tokens per sentence in the truncated abstract
+        using StanfordNLP.'''
         if self.hasValidAbstract():
             if not 'tokens per sentence' in self.properties:
                 sentences = [sent for sent in self.getAbstract().sentence if sent.parseTree.child[0].value == 'S']
@@ -311,6 +290,19 @@ class RealArticle(Article):
             return self.properties['tokens per sentence']
         else:
             return None
+    def getFullTokensPerSentence(self):
+        '''Returns the mean number of tokens per sentence in the whole abstract
+        using NLTK regex-based tokenizer tested with the Penn Treebank.'''
+        if not 'full abstract tokens per sentence' in self.properties:
+            try:
+                self.properties['full abstract tokens per sentence'] = statistics.mean(
+                len(word_tokenize(sent)) 
+                for sent in sent_tokenize(self.getRawAbstract())
+                )
+            except TypeError:
+                self.properties['full abstract tokens per sentence'] = None
+        return self.properties['full abstract tokens per sentence']
+
     def getMeanParseTreeLevels(self):
         '''Returns the mean number of parse tree levels per sentence in the abstract.'''
         if not self.hasValidAbstract():
@@ -347,7 +339,6 @@ class RealArticle(Article):
         properties = ['parse tree levels', 'tokens per sentence'] + \
             ['mean ' + nodeName + ' per sentence' for nodeName in nodeNames]
         if all(property in self.properties for property in properties) or not self.hasValidAbstract():
-            print("erasing abstract because all information has been gotten from it.")
             self.abstract = None
     def print(self, verbose=False):
         if verbose:

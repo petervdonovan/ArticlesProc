@@ -1,1 +1,1 @@
-pathToArticleData = "C:\\Users\\Peter\\Documents\\Research"
+pathToArticleData = "C:\\Users\\pvdon\\Documents\\Research"

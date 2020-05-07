@@ -13,15 +13,21 @@ def getSummaryFromPickle(fileName):
     articleSet = ArticleSet(articles)
     articleSet.getData()
     articleSet.makeHists()
-def getSummaryAndPickleFromXML(startIndex=0, endIndex=0, sampleSize=-1, folderName="dataset"):
+def getSummaryAndPickleFromXML(startIndex=0, endIndex=0, sampleSize=-1, folderName="dataset", simple=False):
     '''Simple out-of-box function that uses the ArticleSetBuilder to show and store data from a folder of XML files.'''
-    articles = ArticleSetBuilder().retrieveArticlesFromXML(startIndex=startIndex, endIndex=endIndex, sampleSize=sampleSize, folderName = folderName).getArticles()
+    if type(folderName) == str:
+        articles = ArticleSetBuilder().retrieveArticlesFromXML(startIndex=startIndex, endIndex=endIndex, sampleSize=sampleSize, folderName = folderName).getArticles()
+    else:
+        articles = set()
+        for folder in folderName:
+            articles=articles.union(ArticleSetBuilder().retrieveArticlesFromXML(startIndex=startIndex, endIndex=endIndex, sampleSize=sampleSize, folderName = folder).getArticles())
+        folderName='_'.join(folderName)
     articleSet = ArticleSet(articles)
     print("Beginning to evaluate all data")
     startTime = time.time()
-    articleSet.getData()
+    articleSet.getData(simple=simple)
     print("Time taken to evaluate all data:", time.time() - startTime)
-    #articleSet.makeHists()
+    articleSet.makeHists()
     #name = input("Name under which to store the pickle? ")
     name = ''
     if startIndex != 0 or endIndex != 0:

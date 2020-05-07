@@ -71,6 +71,7 @@
     <Compile Include="StatsAndVisualization\visualizationUtils.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Utils\constants.py" />
     <Compile Include="Utils\nlpUtils.py">
       <SubType>Code</SubType>
     </Compile>
