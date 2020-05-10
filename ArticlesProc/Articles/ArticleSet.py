@@ -83,27 +83,28 @@ class ArticleSet(object):
     def makeHists(self, bins=20):
         '''Show frequency distributions of each calculated article characteristic.'''
         # Create the chart
-        fig, ax1 = plt.subplots(len(self.getData().columns))
-        title = "| "
-        count = 0
-        for (name, data) in self.getData().iteritems():
-            try:
+        if len(self.getData().columns) > 1:
+            fig, ax1 = plt.subplots(len(self.getData().columns))
+            title = "| "
+            count = 0
+            for (name, data) in self.getData().iteritems():
                 ax1[count].hist(data.tolist(), bins=bins)
-            except TypeError:
-                ax1.hist(data.tolist(), bins=bins)
-            title += name + ' | '
-            count += 1
-        fig.suptitle = title
+                title += name + ' | '
+                count += 1
+            fig.suptitle = title
+        else:
+            plt.hist(self.getData().iloc[:,0])
+            plt.title = self.getData().columns[0]
         plt.show()
     def thinOut(self):
         self.articles = [article for article in self.articles if article.hasValidAbstract()]
-    def getData(self, decimalPlaces=20, verbose=False, simple=False):
+    def getData(self, decimalPlaces=20, verbose=False, simple=True):
         lastTimeCheck = time.time()
         table = [] # 2D list to be converted into a DataFrame
         index = [] # list of tuples to be converted into a MultiIndex to be used in the DataFrame
         if self.rawData is None:
             for article in self.articles:
-                if (simple and article.getRawAbstract() is not None) or (not simple and article.hasValidAbstract()):
+                if (simple and article.getEnglishAbstract() is not None) or (not simple and article.hasValidAbstract()):
                     if verbose:
                         # Print out the data
                         print(article.getPath())
@@ -131,12 +132,14 @@ class ArticleSet(object):
                             round(lengthAdjustedPp, decimalPlaces),
                             round(combinedAdjustedSbarPp, decimalPlaces)
                             ])
-                    else:
+                        # Create row in the index, if applicable
+                        index.append(article.getId())
+                    elif article.getFullTokensPerSentence() is not None:
                         table.append([
                             round(article.getFullTokensPerSentence(), decimalPlaces)
                             ])
-                    # Create row in the index, if applicable
-                    index.append(article.getId())
+                        # Create row in the index, if applicable
+                        index.append(article.getId())
             #print("Time to process article:", time.time() - lastTimeCheck)
             lastTimeCheck = time.time()
             # Save all data to self.rawData as a DataFrame

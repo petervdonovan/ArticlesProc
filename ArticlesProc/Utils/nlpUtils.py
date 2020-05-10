@@ -11,7 +11,7 @@ def getSentencesAnnotatedByLanguage(text):
         for possibleSentence in sent_tokenize(text):
             pairs.append((possibleSentence, guess_language(possibleSentence)))
     return pairs
-def getSentencesWithPossibleMathFlagged(text, minLengthMostWords=2, maxProportionOfGroupingSymbols=0.25):
+def getSentencesWithPossibleMathFlagged(text, minLengthMostWords=2, maxProportionOfGroupingSymbols=0.125):
     '''Gets a list of possible sentences, with possible sentences flagged if they possibly contain math.'''
     pairs = []
     if text:
@@ -27,8 +27,15 @@ def getSentencesWithPossibleMathFlagged(text, minLengthMostWords=2, maxProportio
 def getEnglishSentences(text):
     '''Gets the parts of the text that can be understood as English 
     sentences: Not foreign languages, and not mathematical equations.'''
-    english = '. '.join(sent for (sent, lang) in getSentencesAnnotatedByLanguage(text) if lang == 'en') + '.'
-    return '. '.join(sent for (sent, possibleMath) in getSentencesWithPossibleMathFlagged(english) if not possibleMath) + '.'
+    english = ' '.join(sent for (sent, lang) in getSentencesAnnotatedByLanguage(text) if lang == 'en')
+    englishNoMath = ' '.join(sent for (sent, possibleMath) in getSentencesWithPossibleMathFlagged(english) if not possibleMath)
+    try:
+        print(englishNoMath)
+    except Exception as e:
+        print(e)
+        print(self.getFullPath())
+        print(text)
+    return englishNoMath
 
 def countNodesThatMatchTag(tree, tag):
     '''Returns the number of nodes a given CoreNLP parse tree that have a given tag.'''

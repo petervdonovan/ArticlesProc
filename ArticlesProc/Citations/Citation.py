@@ -23,7 +23,7 @@ class Citation(object):
     def record(self):
         '''Stores information extracted from this citation in 
         the global scope.'''
-        ContributorsDB().registerArticle(self.getArticle())
+        self.getArticle()
     def __str__(self):
         '''Returns the string representation of this Citation.'''
         return self.raw
@@ -118,6 +118,8 @@ class Citation(object):
             contributors=[Contributor.make(name).name for name in self.getNames()],
             publicationYear=self.getYear()
             )
+        for contributor in article.getContributors():
+            contributor.addArticle(article)
         article.addArticleThatCitesThis(self.parentArticle)
         self.parentArticle.addArticleThatThisCites(article)
         return article

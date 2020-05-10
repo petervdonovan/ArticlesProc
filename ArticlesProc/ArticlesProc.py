@@ -67,33 +67,38 @@ def showArticlesOfContributor(fileName='partial_contributorsdbs/ContributorsDB_0
             print(contributor)
         print()
 
-def storeContributorAndArticleDataFromXML(folderName, dbName, sampleSize=-1):
+def storeContributorDataFromXML(articles, dbName):
+    '''Stores both the contributor data and the article data (which 
+    depends on the corresponding contributor data, because it includes
+    names of the stored Contributors)'''
     timesToRecordContributors = []
-    timesToEvaluateProperties = []
-    articles = ArticleSetBuilder().retrieveArticlesFromXML(sampleSize=sampleSize, folderName=folderName).getArticles()
+    timesToEvaluateProperties = []    
     count = 1
     tstart = time.time()
+    virtualArticles = set()
     for article in articles:
         print(count, "Article id", article.getId())
         count += 1
         lastTime = time.time()
         article.recordContributors()
-        if time.time() - lastTime > 1:
-            print('Article at', article.getFullPath(), 'took over 1 second to record contributors')
-        timesToRecordContributors.append(time.time() - lastTime)
+        if time.time() - lastTime > 0.5:
+            print('Article at', article.getFullPath(), 'took over 0.5 seconds to record contributors')
         print('Time to record contributors:', time.time() - lastTime)
-        lastTime = time.time()
-        article.evaluateProperties()
-        timesToEvaluateProperties.append(time.time() - lastTime)
-        print('Time to evaluate properties:', time.time() - lastTime)
-        # Attempt to pickle progress
-        if count % 1000 == 0:
-            ContributorsDB().pickle(fileName='biology_test_dbs_10^6_recursion/' + dbName)
+        lastTime=time.time()
+        citedArticles = set(citation.getArticle() for citation in article.getCitations())
+        virtualArticles = virtualArticles.union(citedArticles)
+        article.recordCitations()
+        if time.time() - lastTime > 0.5:
+            print('Article at', article.getFullPath(), 'took over 0.5 seconds to record citations')
+        print('Time to record citations:', time.time() - lastTime)
+        ## Attempt to pickle progress
+        #if count % 1000 == 0:
+        #    ContributorsDB().pickle(fileName='biology_test_dbs_10^6_recursion/' + dbName)
     print('Total time:', time.time() - tstart)
     # print("mean record contributors time: ", sum(timesToRecordContributors) / len(timesToRecordContributors))
     # print("mean evaluate properties time: ", sum(timesToEvaluateProperties) / len(timesToEvaluateProperties))
-    ContributorsDB().pickle(fileName=dbName)
-    ArticleSet(articles).pickleSelf(fileName=dbName)
+    ArticleSet(articles.union(virtualArticles)).pickleAllArticles(fileName=dbName+'_articles')
+    ContributorsDB().pickle(fileName=dbName+'_contributors')
 
 # storeContributorAndArticleDataFromXML('receipt-id-1423981-part-001 (biology)', 'biology_highmaxrecursion_full_db')
 def examineForNormalTransformation(pickleFileName, metric, bins, *transformation):
@@ -140,7 +145,11 @@ def scatterSyntacticMeasures(pickleFileName, metric1, metric2):
 # getNormalTransformationFunction('FULL_ARTICLE_SET_STABLE_IDS', 'Dependent Clauses')
 # getSummaryFromPickle('FULL_ARTICLE_SET_STABLE_IDS')
 # scatterSyntacticMeasures('FULL_ARTICLE_SET_STABLE_IDS', 'Tokens', 'Parse Tree Levels')
-getSummaryAndPickleFromXML(
-    folderName=["receipt-id-1423981-part-001 (biology)", "receipt-id-1451681-part-001 (literature)", 
-                "receipt-id-1451701-part-001 (math)", "receipt-id-1451711-part-001 (sociology)"], 
-    simple=True)
+#getSummaryAndPickleFromXML(
+#    folderName=["receipt-id-1423981-part-001 (biology)", "receipt-id-1451681-part-001 (literature)", 
+#                "receipt-id-1451701-part-001 (math)", "receipt-id-1451711-part-001 (sociology)"], 
+#    simple=True)
+# getSummaryFromPickle("FULL_DATASET_receipt-id-1423981-part-001 (biology)_receipt-id-1451681-part-001 (literature)_receipt-id-1451701-part-001 (math)_receipt-id-1451711-part-001 (sociology)_08-May-2020 (13_06)")
+articles = ArticleSetBuilder().retrieveArticlesFromXML(folderName=folderName).getArticles()
+litArticles = ArticleSet(articles).getSubsetsByDiscipline()['literature'].articles
+storeContributorDataFromXML(litArticles, 'lit-pickles/literature')

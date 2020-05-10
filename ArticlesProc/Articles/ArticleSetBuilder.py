@@ -27,7 +27,6 @@ def getSummaryAndPickleFromXML(startIndex=0, endIndex=0, sampleSize=-1, folderNa
     startTime = time.time()
     articleSet.getData(simple=simple)
     print("Time taken to evaluate all data:", time.time() - startTime)
-    articleSet.makeHists()
     #name = input("Name under which to store the pickle? ")
     name = ''
     if startIndex != 0 or endIndex != 0:
@@ -36,6 +35,7 @@ def getSummaryAndPickleFromXML(startIndex=0, endIndex=0, sampleSize=-1, folderNa
         name = 'FULL_DATASET'
     if name: articleSet.pickleAllArticles(fileName=(name + '_' + folderName))
     else: articleSet.pickleAllArticles(fileName=folderName)
+    articleSet.makeHists()
 
 class ArticleSetBuilder(object):
     """Accesses the file system of the computer to pull article data use it to create Articles."""

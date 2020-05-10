@@ -65,6 +65,16 @@ class RealArticle(Article):
         '''The path to the raw article XML from the root. If the root is the folder containing the article XML files, this is the name of the file.'''
         properties = raw[2]
         return cls(root, path, properties=properties)
+    def getDiscipline():
+        '''Returns the discipline of this Article.'''
+        if 'biology' in self.path:
+            return 'biology'
+        if 'sociology' in self.path:
+            return 'sociology'
+        if 'math' in self.path:
+            return 'math'
+        if 'literature' in self.path:
+            return 'literature'
     def getPath(self):
         '''Returns the name of the original XML file.'''
         return self.path
@@ -126,12 +136,16 @@ class RealArticle(Article):
         if self.getRawAbstract():
             return guess_language(self.getRawAbstract())
         return ''
-    
+    def getEnglishAbstract(self):
+        '''Gets the string form as English sentences.'''
+        return getEnglishSentences(self.getRawAbstract())
     def getAbstract(self):
         '''Returns the abstract of the article, or None if no abstract exists.'''
         if not self.abstract:
             # Get and processs stringAbstract
-            stringAbstract = getEnglishSentences(self.getRawAbstract())
+            if self.getEnglishAbstract() is None:
+                return None
+            stringAbstract = self.getEnglishAbstract()
             if len(stringAbstract) > RealArticle.MAX_ABSTRACT_LENGTH:
                 stringAbstract = stringAbstract[:RealArticle.MAX_ABSTRACT_LENGTH]
             # Try to annotate stringAbstract
@@ -160,12 +174,13 @@ class RealArticle(Article):
         return False
     def recordContributors(self):
         '''Registers all the Contributors who contributed to this article in
-        the ContributorsDB singleton and all the Contributors whose articles
-        art cited by this Article.'''
+        the ContributorsDB singleton.'''
         if 'contributors' in self.properties:
             del self.properties['contributors']
         for contributor in self.getContributors():
             ContributorsDB().registerContributor(contributor)
+    def recordCitations(self):
+        '''Records all of the Citations that appear in this Article.'''
         for citation in self.getCitations():
             # t0 = time.time()
             citation.record()
@@ -297,10 +312,17 @@ class RealArticle(Article):
             try:
                 self.properties['full abstract tokens per sentence'] = statistics.mean(
                 len(word_tokenize(sent)) 
-                for sent in sent_tokenize(self.getRawAbstract())
+                for sent in sent_tokenize(self.getEnglishAbstract())
                 )
             except TypeError:
+                # self.getRawAbstract() returned None, presumably
                 self.properties['full abstract tokens per sentence'] = None
+            except statistics.StatisticsError:
+                # 0 sentences, presumably
+                self.properties['full abstract tokens per sentence'] = None
+            except Exception as e:
+                print(self.getFullPath())
+                raise e
         return self.properties['full abstract tokens per sentence']
 
     def getMeanParseTreeLevels(self):
