@@ -23,47 +23,14 @@ class ContributorsDB:
             contributor, returns a float index indicating where
             the new contributor would belong relative to the others,
             if it were in the database.
-            (Uses binary search as of 4/4/2020)'''
+            (Uses binary search, log(n) theta class as of 4/4/2020)'''
             return binarySearch(
-                self, name, db, 
+                name, self.db, 
                 dbItemIdFunc = lambda contributor: contributor.name, 
                 itemNearMatchFunc = lambda search, itemInList: search == itemInList.name, 
                 itemMatchFunc = lambda search, itemInList: search.contains(itemInList.name) or \
-                                           itemInList.name.contains(search), 
-                start=0, end=0)
-            #if len(self.db) == 0:
-            #    return -0.5
-            #if end == 0: end = len(self.db)
-            ## Base case
-            #if end - start == 1:
-            #    #print('self.db:_______________________________________')
-            #    #for contributor in self.db:
-            #    #    print(contributor)
-            #    if name == self.db[start].name:
-            #        result = searchWithGuess(self.db, start, name, 
-            #                               nearMatch=(
-            #                                   lambda search, itemInList:
-            #                                   search == itemInList.name
-            #                                   ),
-            #                               match=(
-            #                                   lambda search, itemInList: 
-            #                                   search.contains(itemInList.name) or \
-            #                                       itemInList.name.contains(search)
-            #                                   )
-            #                               )
-            #        if result != -1:
-            #            return result
-            #    if name < self.db[0].name:
-            #        return -0.5
-            #    return (end + start) / 2
-            ## Recursive case
-            #midpoint = int((start + end) / 2)
-            #if self.db[midpoint].name <= name:
-            #    return self.search(name, start=midpoint, 
-            #                       end=end)
-            #else:
-            #    return self.search(name, start=start, 
-            #                       end=midpoint)
+                                           itemInList.name.contains(search)
+                )
         def add(self, contributor):
             '''Adds a new Contributor to the database, or combines
             it with an existing Contributor if possible.'''
