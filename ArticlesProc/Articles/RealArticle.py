@@ -65,15 +65,15 @@ class RealArticle(Article):
         '''The path to the raw article XML from the root. If the root is the folder containing the article XML files, this is the name of the file.'''
         properties = raw[2]
         return cls(root, path, properties=properties)
-    def getDiscipline():
+    def getDiscipline(self):
         '''Returns the discipline of this Article.'''
-        if 'biology' in self.path:
+        if 'biology' in self.root:
             return 'biology'
-        if 'sociology' in self.path:
+        if 'sociology' in self.root:
             return 'sociology'
-        if 'math' in self.path:
+        if 'math' in self.root:
             return 'math'
-        if 'literature' in self.path:
+        if 'literature' in self.root:
             return 'literature'
     def getPath(self):
         '''Returns the name of the original XML file.'''

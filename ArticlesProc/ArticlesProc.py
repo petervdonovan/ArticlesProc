@@ -150,6 +150,6 @@ def scatterSyntacticMeasures(pickleFileName, metric1, metric2):
 #                "receipt-id-1451701-part-001 (math)", "receipt-id-1451711-part-001 (sociology)"], 
 #    simple=True)
 # getSummaryFromPickle("FULL_DATASET_receipt-id-1423981-part-001 (biology)_receipt-id-1451681-part-001 (literature)_receipt-id-1451701-part-001 (math)_receipt-id-1451711-part-001 (sociology)_08-May-2020 (13_06)")
-articles = ArticleSetBuilder().retrieveArticlesFromXML(folderName=folderName).getArticles()
-litArticles = ArticleSet(articles).getSubsetsByDiscipline()['literature'].articles
-storeContributorDataFromXML(litArticles, 'lit-pickles/literature')
+articles = ArticleSetBuilder().retrieveArticlesFromPickle('FULL_DATASET_biology_literature_math_sociology_10-May-2020 (00_00)').getArticles()
+litArticles = ArticleSet(articles).getSubsetsByDiscipline()['math'].articles
+storeContributorDataFromXML(litArticles, 'math-pickles/math')

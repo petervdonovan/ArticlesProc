@@ -1,4 +1,4 @@
-from Utils.search import searchWithGuess
+from Utils.search import binarySearch
 from Utils.timeUtils import getStringTimestamp
 from People.Name import Name
 import pickle
@@ -24,39 +24,46 @@ class ContributorsDB:
             the new contributor would belong relative to the others,
             if it were in the database.
             (Uses binary search as of 4/4/2020)'''
-            if len(self.db) == 0:
-                return -0.5
-            if end == 0: end = len(self.db)
-            # Base case
-            if end - start == 1:
-                #print('self.db:_______________________________________')
-                #for contributor in self.db:
-                #    print(contributor)
-                if name == self.db[start].name:
-                    result = searchWithGuess(self.db, start, name, 
-                                           nearMatch=(
-                                               lambda search, itemInList:
-                                               search == itemInList.name
-                                               ),
-                                           match=(
-                                               lambda search, itemInList: 
-                                               search.contains(itemInList.name) or \
-                                                   itemInList.name.contains(search)
-                                               )
-                                           )
-                    if result != -1:
-                        return result
-                if name < self.db[0].name:
-                    return -0.5
-                return (end + start) / 2
-            # Recursive case
-            midpoint = int((start + end) / 2)
-            if self.db[midpoint].name <= name:
-                return self.search(name, start=midpoint, 
-                                   end=end)
-            else:
-                return self.search(name, start=start, 
-                                   end=midpoint)
+            return binarySearch(
+                self, name, db, 
+                dbItemIdFunc = lambda contributor: contributor.name, 
+                itemNearMatchFunc = lambda search, itemInList: search == itemInList.name, 
+                itemMatchFunc = lambda search, itemInList: search.contains(itemInList.name) or \
+                                           itemInList.name.contains(search), 
+                start=0, end=0)
+            #if len(self.db) == 0:
+            #    return -0.5
+            #if end == 0: end = len(self.db)
+            ## Base case
+            #if end - start == 1:
+            #    #print('self.db:_______________________________________')
+            #    #for contributor in self.db:
+            #    #    print(contributor)
+            #    if name == self.db[start].name:
+            #        result = searchWithGuess(self.db, start, name, 
+            #                               nearMatch=(
+            #                                   lambda search, itemInList:
+            #                                   search == itemInList.name
+            #                                   ),
+            #                               match=(
+            #                                   lambda search, itemInList: 
+            #                                   search.contains(itemInList.name) or \
+            #                                       itemInList.name.contains(search)
+            #                                   )
+            #                               )
+            #        if result != -1:
+            #            return result
+            #    if name < self.db[0].name:
+            #        return -0.5
+            #    return (end + start) / 2
+            ## Recursive case
+            #midpoint = int((start + end) / 2)
+            #if self.db[midpoint].name <= name:
+            #    return self.search(name, start=midpoint, 
+            #                       end=end)
+            #else:
+            #    return self.search(name, start=start, 
+            #                       end=midpoint)
         def add(self, contributor):
             '''Adds a new Contributor to the database, or combines
             it with an existing Contributor if possible.'''
@@ -92,7 +99,7 @@ class ContributorsDB:
         # if time.time()-t0 > 0.1:
         #     print('took a LONG time to add to the ContributorsDB:')
         #     print(self.get(contributor.name))
-        print('Time to registerContributor:', time.time() - t0)
+        #print('Time to registerContributor:', time.time() - t0)
         return self.get(contributor.name)
     def registerArticle(self, article):
         '''Stores an Article in this database, under the names of 
