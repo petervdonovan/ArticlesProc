@@ -1,6 +1,7 @@
 from Citations.Citation import Citation
 from Articles.ArticleSet import ArticleSet, getGranularStatisticalSummariesOfSetsDict, chartDifferencesInSubsetMeans
 from Articles.ArticleSetBuilder import ArticleSetBuilder, getSummaryFromPickle, getSummaryAndPickleFromXML
+from Articles.ArticlesDB import ArticlesDB
 
 from DevelopmentSets.citationRecognitionLiteratureSet681 import sampleLiteratureCitations
 from DevelopmentSets.citationRecognitionBiologySet981 import sampleBiologyCitations
@@ -67,7 +68,7 @@ def showArticlesOfContributor(fileName='partial_contributorsdbs/ContributorsDB_0
             print(contributor)
         print()
 
-def storeContributorDataFromXML(articles, dbName):
+def storeContributorDataFromArticles(articles, dbName):
     '''Stores both the contributor data and the article data (which 
     depends on the corresponding contributor data, because it includes
     names of the stored Contributors)'''
@@ -75,19 +76,21 @@ def storeContributorDataFromXML(articles, dbName):
     timesToEvaluateProperties = []    
     count = 1
     tstart = time.time()
-    virtualArticles = set()
+    virtualArticles = ArticleSet(set())
     for article in articles:
         print(count, "Article id", article.getId())
         count += 1
+
         lastTime = time.time()
         article.recordContributors()
         if time.time() - lastTime > 0.5:
             print('Article at', article.getFullPath(), 'took over 0.5 seconds to record contributors')
         print('Time to record contributors:', time.time() - lastTime)
+
         lastTime=time.time()
         citedArticles = set(citation.getArticle() for citation in article.getCitations())
-        virtualArticles = virtualArticles.union(citedArticles)
-        article.recordCitations()
+        virtualArticles = virtualArticles + ArticleSet(citedArticles)
+        #article.recordCitations()
         if time.time() - lastTime > 0.5:
             print('Article at', article.getFullPath(), 'took over 0.5 seconds to record citations')
         print('Time to record citations:', time.time() - lastTime)
@@ -97,7 +100,7 @@ def storeContributorDataFromXML(articles, dbName):
     print('Total time:', time.time() - tstart)
     # print("mean record contributors time: ", sum(timesToRecordContributors) / len(timesToRecordContributors))
     # print("mean evaluate properties time: ", sum(timesToEvaluateProperties) / len(timesToEvaluateProperties))
-    ArticleSet(articles.union(virtualArticles)).pickleAllArticles(fileName=dbName+'_articles')
+    (ArticleSet(articles) + virtualArticles).pickleAllArticles(fileName=dbName+'_articles')
     ContributorsDB().pickle(fileName=dbName+'_contributors')
 
 # storeContributorAndArticleDataFromXML('receipt-id-1423981-part-001 (biology)', 'biology_highmaxrecursion_full_db')
@@ -150,6 +153,178 @@ def scatterSyntacticMeasures(pickleFileName, metric1, metric2):
 #                "receipt-id-1451701-part-001 (math)", "receipt-id-1451711-part-001 (sociology)"], 
 #    simple=True)
 # getSummaryFromPickle("FULL_DATASET_receipt-id-1423981-part-001 (biology)_receipt-id-1451681-part-001 (literature)_receipt-id-1451701-part-001 (math)_receipt-id-1451711-part-001 (sociology)_08-May-2020 (13_06)")
-articles = ArticleSetBuilder().retrieveArticlesFromPickle('FULL_DATASET_biology_literature_math_sociology_10-May-2020 (00_00)').getArticles()
-litArticles = ArticleSet(articles).getSubsetsByDiscipline()['math'].articles
-storeContributorDataFromXML(litArticles, 'math-pickles/math')
+def storeDisciplineData(discipline, folder):
+    '''Store data about articles from the discipline.'''
+    articles = ArticleSetBuilder().retrieveArticlesFromPickle('FULL_DATASET_biology_literature_math_sociology_10-May-2020 (00_00)').getArticles()
+    disciplineArticles = ArticleSet(articles).getSubsetsByDiscipline()[discipline].articles
+    ls = list()
+    for article in disciplineArticles:
+        if article.getId() % 10 == 0:
+            ls.append(article.getId())
+        if len(ls) == 10:
+            print(ls)
+            ls = list()
+    storeContributorDataFromArticles(disciplineArticles, folder + '/' + discipline)
+
+def makeArticlesDB(inPicklePath, outPicklePath):
+    '''Based on a stored raw Articles data pickle, make a rapidly
+    searchable ArticlesDB.'''
+    articles = ArticleSetBuilder().retrieveArticlesFromPickle(inPicklePath).getArticles()
+    for article in articles:
+        ArticlesDB().add(article)
+    ArticlesDB().pickle(outPicklePath)
+
+def repairArticlesRaw(inPicklePath, outPicklePath):
+    articles = ArticleSetBuilder().retrieveArticlesFromPickle(inPicklePath).getArticles()
+    for article in articles:
+        if 'articlesThatCiteThis' in article.properties:
+            article.properties['articlesThatCiteThis'] = [article.getId() for article in article.properties['articlesThatCiteThis']]
+        if 'articlesThatThisCites' in article.properties:
+            article.properties['articlesThatThisCites'] = [article.getId() for article in article.properties['articlesThatThisCites']]
+    ArticleSet(articles).pickleAllArticles(fileName=outPicklePath)
+
+def repairContributors(inPicklePath, outPicklePath):
+    ContributorsDB().getFromPickle(inPicklePath)
+    for contrib in ContributorsDB.instance.db:
+        for article in contrib.getArticles().articles:
+            if article is None:
+                print('NONE ARTICLE*************************************************************')
+    ContributorsDB().pickle(outPicklePath)
+
+
+
+#ContributorsDB().getFromPickle('lit-pickles/literature_contributors_11-May-2020 (21_49)')
+#contribs = ContributorsDB().getSample(40)
+#print("Articles by the randomly selected contributors:")
+#for contrib in contribs:
+#    print()
+#    print('*******************************************************')
+#    print()
+#    for article in contrib.getArticles():
+#        print(article)
+#ArticlesDB().getFromPickle('lit-pickles/lit-articles-db_15-May-2020 (19_55)')
+#repairContributors('lit-pickles/lit_contributors_11-May-2020 (21_49)',
+#                   'lit-pickles/lit_contributors')
+#ArticlesDB().clear()
+
+#ArticlesDB().getFromPickle('soc-pickles/soc-articles-db_16-May-2020 (13_25)')
+#repairContributors('soc-pickles/soc_contributors_16-May-2020 (05_15)',
+#                   'soc-pickles/soc_contributors')
+#ArticlesDB().clear()
+
+#ArticlesDB().getFromPickle('math-pickles/math-articles-db_15-May-2020 (19_48)')
+#repairContributors('math-pickles/math_contributors_15-May-2020 (14_12)',
+#                   'math-pickles/math_contributors')
+#ArticlesDB().clear()
+
+#ArticlesDB().getFromPickle('bio-pickles/bio-articles-db_15-May-2020 (20_05)')
+#repairContributors('bio-pickles/bio_contributors_13-May-2020 (23_13)',
+#                   'bio-pickles/bio_contributors')
+
+#ArticlesDB().getFromPickle('lit-pickles/lit_articles_db_17-May-2020 (18_02)')
+#print('length of articlesDB:', len(ArticlesDB.instance.db))
+#articles = ArticleSetBuilder().retrieveArticlesFromPickle('lit-pickles/lit_articles_15-May-2020 (17_14)').getArticles()
+#print('length of articles raws', len(articles))
+#for article in articles:
+#    if ArticlesDB().get(article.id) is None:
+#        print("Did not find this article:")
+#        print(article)
+#        try:
+#            print(article.getFullPath())
+#        except:
+#            pass
+#makeArticlesDB('lit-pickles/lit_articles_15-May-2020 (17_14)', 'lit-pickles/lit_articles_db')
+#ArticlesDB().clear()
+#makeArticlesDB('soc-pickles/soc_articles_16-May-2020 (05_14)', 'soc-pickles/soc_articles_db')
+#ArticlesDB().clear()
+#makeArticlesDB('math-pickles/math_articles_15-May-2020 (17_11)', 'math-pickles/math-articles-db')
+#ArticlesDB().clear()
+#makeArticlesDB('bio-pickles/bio_articles_15-May-2020 (17_17)', 'bio-pickles/bio-articles-db')
+#ArticlesDB().clear()
+
+#ArticlesDB().getFromPickle('lit-pickles/lit-articles-db_15-May-2020 (19_55)')
+#repairContributors('lit-pickles/lit_contributors_11-May-2020 (21_49)', 'lit-pickles/lit_contributors')
+#ArticlesDB().clear()
+#ArticlesDB().getFromPickle('soc-pickles/soc-articles-db_16-May-2020 (13_25)')
+#repairContributors('soc-pickles/soc_contributors_16-May-2020 (05_15)', 'soc-pickles/soc_contributors')
+#ArticlesDB().clear()
+#ArticlesDB().getFromPickle('bio-pickles/bio-articles-db_15-May-2020 (20_05)')
+#repairContributors('bio-pickles/bio_contributors_13-May-2020 (23_13)', 'bio-pickles/bio_contributors')
+#ArticlesDB().clear()
+#ArticlesDB().getFromPickle('math-pickles/math-articles-db_15-May-2020 (19_48)')
+#repairContributors('math-pickles/math_contributors_15-May-2020 (14_12)', 'math-pickles/math_contributors')
+
+ArticleSetBuilder().retrieveArticlesFromPickle('lit-pickles/literature_articles_19-May-2020 (00_15)')
+#ArticlesDB().getFromPickle('lit-pickles/lit-articles-db_18-May-2020 (21_23)')
+ls = list()
+for article in ArticlesDB.instance.db:
+    if article.getId() % 10 == 0:
+        ls.append(article.getId())
+    if len(ls) == 10:
+        print(ls)
+        ls = list()
+#for article in ArticlesDB.instance.db:
+#    if not article.properties['contributors']:
+#        try:
+#            print(article.properties['citation'].raw)
+#        except KeyError:
+#            print('No contributors, no citation.')
+for id in range(47550, 47700):
+    print(id)
+    article = ArticlesDB().get(id)
+    print(article)
+    try:
+        print(article.properties)
+    except:
+        pass
+    try:
+        print(article.getFullPath())
+    except:
+        print('not real.')
+    try:
+        for citing in article.properties['articlesThatCiteThis']:
+            print(ArticlesDB().get(citing))
+            print(ArticlesDB().get(citing).properties)
+    except:
+        print('not cited.')
+    try:
+        for citing in article.properties['articlesThatThisCites']:
+            print(ArticlesDB().get(citing))
+            print(ArticlesDB().get(citing).properties)
+    except:
+        print('not citing.')
+    print()
+    print()
+print('________________________________________________________')
+print('________________________________________________________')
+print('________________________________________________________')
+length = len(ArticlesDB.instance.db)
+for id in range(length-150, 635600):
+    print(id)
+    article = ArticlesDB().get(id)
+    print(article)
+    try:
+        print(article.properties)
+    except:
+        pass
+    try:
+        print(article.getFullPath())
+    except:
+        print('not real.')
+    try:
+        for citing in article.properties['articlesThatCiteThis']:
+            print(ArticlesDB().get(citing))
+            print(ArticlesDB().get(citing).properties)
+    except:
+        print('not cited.')
+    try:
+        for citing in article.properties['articlesThatThisCites']:
+            print(ArticlesDB().get(citing))
+            print(ArticlesDB().get(citing).properties)
+    except:
+        print('not citing.')
+    print()
+    print()
+
+#storeDisciplineData('literature', 'lit-pickles')
+#ArticlesDB().pickle('lit-pickles/lit-articles-db')

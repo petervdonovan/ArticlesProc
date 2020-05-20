@@ -3,6 +3,7 @@ from Utils.timeUtils import getStringTimestamp
 from People.Name import Name
 import pickle
 import time
+import random
 
 class ContributorsDB:
     """A singleton contributors registration system, documenting
@@ -43,6 +44,9 @@ class ContributorsDB:
         assert(type(name) == Name)
         result = ContributorsDB.instance.get(name)
         return result
+    def getSample(self, n):
+        '''Gets a random sample of contributors.'''
+        return random.sample(set(ContributorsDB().instance.db), n)
     def print(self):
         for contributor in ContributorsDB.instance.db:
             print(contributor)

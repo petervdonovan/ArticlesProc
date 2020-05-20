@@ -1,3 +1,6 @@
+from Utils.timeUtils import getStringTimestamp
+import pickle
+
 def binarySearch(desiredId, db, dbItemIdFunc, itemNearMatchFunc, itemMatchFunc, start=0, end=0):
     '''Returns the index of the equivalent contributor
     in the database. If there is no equivalent 
@@ -11,25 +14,25 @@ def binarySearch(desiredId, db, dbItemIdFunc, itemNearMatchFunc, itemMatchFunc, 
     if end == 0: end = len(db)
     # Base case
     if end - start == 1:
-        if itemNearMatchFunc(desiredId, dbItemIdFunc(db[start])):
+        if itemNearMatchFunc(desiredId, db[start]):
             result = searchWithGuess(db, start, desiredId, 
                                    nearMatch=itemNearMatchFunc,
                                    match=itemMatchFunc
                                    )
             if result != -1:
                 return result
-        if name < dbItemIdFunc(db[0]):
+        if desiredId < dbItemIdFunc(db[0]):
             return -0.5
         return (end + start) / 2
     # Recursive case
     midpoint = int((start + end) / 2)
-    if getItemIdFunc(db[midpoint]) <= desiredId:
+    if dbItemIdFunc(db[midpoint]) <= desiredId:
         return binarySearch(
             desiredId, db, dbItemIdFunc, itemNearMatchFunc, itemMatchFunc, 
             start=midpoint, end=end
             )
     else:
-        return self.search(
+        return binarySearch(
             desiredId, db, dbItemIdFunc, itemNearMatchFunc, itemMatchFunc, 
             start=start, end=midpoint)
     
@@ -84,7 +87,10 @@ class DB(object):
         2 items match (a function that can be independent of ID).
         The term ID is used loosely, to simply mean any piece of
         identifying information, and it is possible for the ID to
-        not be unique.'''
+        not be unique.
+        itemNearMatchFunc and itemMatchFunc are functions of (the 
+        identifying characteristic used to search for the item) (arg1)
+        and (the item itself) (arg2).'''
         self.db = list()
         self.dbItemIdFunc = dbItemIdFunc
         self.itemNearMatchFunc = itemNearMatchFunc
@@ -131,3 +137,6 @@ class DB(object):
         dbfile = open(fileName, 'rb')
         db = pickle.load(dbfile)
         self.db = db
+    def clear(self):
+        '''Clears all items from DB and starts afresh with an empty set.'''
+        self.db = list()

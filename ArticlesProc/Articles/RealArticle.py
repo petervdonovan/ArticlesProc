@@ -64,6 +64,7 @@ class RealArticle(Article):
         path = raw[1]
         '''The path to the raw article XML from the root. If the root is the folder containing the article XML files, this is the name of the file.'''
         properties = raw[2]
+        Article.setMinId(properties['id'])
         return cls(root, path, properties=properties)
     def getDiscipline(self):
         '''Returns the discipline of this Article.'''
@@ -400,5 +401,5 @@ class RealArticle(Article):
         self.getMeanDependentClauses()
         self.getMeanPrepositionalPhrases()
         self.getJournal()
-    def combine(self, other):
-        return RealArticle.initFromRaw((self.root, self.path, super().combine(other).properties))
+    #def combine(self, other):
+    #    return RealArticle.initFromRaw((self.root, self.path, super().combine(other).properties))

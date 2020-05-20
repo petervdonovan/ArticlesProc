@@ -4,6 +4,7 @@ import pickle
 import time
 
 from Articles.RealArticle import RealArticle
+from Articles.Article import Article
 from Articles.ArticleSet import ArticleSet
 from Utils import constants as constants
 
@@ -69,7 +70,10 @@ class ArticleSetBuilder(object):
             dbfile = open(fileName, 'rb')
             db = pickle.load(dbfile)
             for articleRaw in db:
-                self.articles.add(RealArticle.initFromRaw(articleRaw))
+                try:
+                    self.articles.add(RealArticle.initFromRaw(articleRaw))
+                except KeyError:
+                    self.articles.add(Article.initFromRaw(articleRaw))
         return self
     def getArticles(self):
         return self.articles

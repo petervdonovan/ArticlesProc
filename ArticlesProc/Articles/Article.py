@@ -1,6 +1,7 @@
 from People.Contributor import sameContributor
 from People.ContributorsDB import ContributorsDB
 from People.Name import Name
+from Articles.ArticlesDB import ArticlesDB
 
 class Article(object):
     """Describes both real and virtual articles."""
@@ -11,15 +12,26 @@ class Article(object):
         self.properties = dict()
         if properties:
             self.properties = properties
-        '''Dictionary containing found properties of the article -- to be filled in lazily as specific properties are requested.'''
+        '''Dictionary containing found properties of the article -- 
+        to be filled in lazily as specific properties are requested.'''
         if not 'id' in self.properties:
             self.properties['id'] = Article.id
+            Article.id += 1
             '''The unique id of this article.'''
         if contributors is not None:
             self.properties['contributors'] = contributors
         if publicationYear is not None:
             self.properties['publicationYear'] = publicationYear
-        Article.id += 1
+        ArticlesDB().add(self)
+        assert(ArticlesDB().get(self.getId()))
+    @staticmethod
+    def setMinId(id):
+        '''Ensures that no Article created henceforth in this program run
+        shall have an id less than the id passed. Does nothing if the current
+        incrementing id is already greater than the id passed.'''
+        #if id > Article.id + 1:
+        #    print('skipping from', Article.id, 'to', id)
+        Article.id = max(Article.id, id)
     def __str__(self):
         return (
             'Article #' + str(self.getId()) + ', published in ' + 
@@ -58,6 +70,11 @@ class Article(object):
     def isEquivalent(self, other):
         '''Checks if two articles are similar (and therefore should have same id)'''
         if isinstance(other, Article):
+            # If contributor names aren't known, then it won't be possible to 
+            # know whether the articles are the equivalent, so it will be 
+            # assumed that they are not equivalent.
+            if not self.getContributorNames() or not other.getContributorNames():
+                return False
             # Check if contributor lists are consistent
             if self.getContributorNames() and other.getContributorNames() and (
                 not (
@@ -85,7 +102,7 @@ class Article(object):
             return False
         return 'et al' in self.getSelfCitation().raw.lower()
     def getSelfCitation(self):
-        '''Get the citation from which information about this Article came.'''
+        '''Get the citation from which information about this addArticleThatCitesThis came.'''
         if not 'citation' in self.properties:
             return None
         return self.properties['citation']
@@ -96,19 +113,19 @@ class Article(object):
             self.properties['articlesThatCiteThis'] = []
         for article in self.properties['articlesThatCiteThis']:
             #Check if same id article already exists
-            if article.id == additionalArticle.id:
+            if article.getId() == additionalArticle.getId():
                 return
-        self.properties['articlesThatCiteThis'].append(additionalArticle)
+        self.properties['articlesThatCiteThis'].append(additionalArticle.getId())
     def addArticleThatThisCites(self, additionalArticle):
-        '''Add an article to the list of articles that this article cites iff 
+        '''Add an article id to the list of articles that this article cites iff 
         that article is not already in the list'''
         if not 'articlesThatThisCites' in self.properties:
             self.properties['articlesThatThisCites'] = []
-        for article in self.properties['articlesThatThisCites']:
+        for id in self.properties['articlesThatThisCites']:
             #Check if same id article already exists
-            if article.id == additionalArticle.id:
+            if id == additionalArticle.getId():
                 return
-        self.properties['articlesThatThisCites'].append(additionalArticle)
+        self.properties['articlesThatThisCites'].append(additionalArticle.getId())
     def getId(self):
         return self.properties['id']
     def setDiscipline(self, discipline):
@@ -144,6 +161,7 @@ class Article(object):
     @classmethod
     def initFromRaw(cls, raw):
         if type(raw) is dict:
+            Article.setMinId(raw['id'])
             return cls(properties=raw)
         else:
             raise TypeError('The parameter \'raw\' must be a dictionary.')

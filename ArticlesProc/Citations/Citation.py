@@ -7,6 +7,7 @@ from People.Name import Name
 from People.Contributor import Contributor
 from People.ContributorsDB import ContributorsDB
 from Articles.Article import Article
+from Articles.ArticlesDB import ArticlesDB
 import datetime
 
 class Citation(object):
@@ -20,6 +21,8 @@ class Citation(object):
         '''The raw string of this citation.'''
         self.parentArticle = parentArticle
         '''The article in which this Citation appeared.'''
+        self.articleId = None
+        '''The id of the article to which this Citation refers.'''
     def record(self):
         '''Stores information extracted from this citation in 
         the global scope.'''
@@ -113,16 +116,18 @@ class Citation(object):
             Citation.countYearNotGiven += 1
             return None
     def getArticle(self):
-        article = Article(
-            properties={'citation':self},
-            contributors=[Contributor.make(name).name for name in self.getNames()],
-            publicationYear=self.getYear()
-            )
-        for contributor in article.getContributors():
-            contributor.addArticle(article)
-        article.addArticleThatCitesThis(self.parentArticle)
-        self.parentArticle.addArticleThatThisCites(article)
-        return article
+        if self.articleId is None:
+            article = Article(
+                properties={'citation':self},
+                contributors=[Contributor.make(name).name for name in self.getNames()],
+                publicationYear=self.getYear()
+                )
+            for contributor in article.getContributors():
+                contributor.addArticle(article)
+            article.addArticleThatCitesThis(self.parentArticle)
+            self.parentArticle.addArticleThatThisCites(article)
+            self.articleId = article.getId()
+        return ArticlesDB().get(self.articleId)
 
 def getCitableYearsFromString(frontRe, backRe, string):
     return [

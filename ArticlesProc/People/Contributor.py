@@ -1,6 +1,7 @@
 from Articles.ArticleSet import ArticleSet
 from People.ContributorsDB import ContributorsDB
 from People.Name import Name
+from Articles.ArticlesDB import ArticlesDB
 
 def sameContributor(name, otherName):
     '''Returns True iff two names correspond to the same Contributor.'''
@@ -9,6 +10,8 @@ def sameContributor(name, otherName):
     if not ContributorsDB().get(otherName):
         Contributor.make(otherName)
     return ContributorsDB().get(name) == ContributorsDB().get(otherName)
+
+
 class Contributor(object):
     """Describes a person who contributes to one
     or more Articles."""
@@ -43,15 +46,39 @@ class Contributor(object):
     def addArticle(self, article):
         '''Add an article that was published under 
         the name of this Contributor.'''
-        self.articles = self.articles + ArticleSet(set([article]))
+        self.articles = set(
+            article.getId() for article in 
+            (self.getArticles() + ArticleSet(set([article]))).articles
+            )
     def add(self, other):
         '''Combine the information of this Contributor with
         that of another (presumably because it turns out 
         that they are the same person).'''
-        self.articles = self.articles + other.articles
+        self.articles = set(
+            article.getId() for article in 
+            (self.getArticles() + other.getArticles()).articles
+            )
     def getArticles(self):
         '''Returns the Articles attributed to this Contributor.'''
-        return self.articles
+        if type(self.articles) == ArticleSet: # Backwards compatibility :(
+            for article in self.articles.articles:
+                ArticlesDB().add(article)
+                if ArticlesDB().get(article.getId()) is None:
+                    print(article)
+                    print(ArticlesDB.instance.db)
+                assert(ArticlesDB().get(article.getId()) is not None)
+            #for article in self.articles.articles:
+            #    if ArticlesDB().get(article.getId()) is None:
+            #        try:
+            #            print("none article inside getArticles... id", article.getId(), "path", article.getFullPath())
+            #        except AttributeError:
+            #            print("none article inside getArticles... id", article.getId())
+            self.articles = set(article.getId() for article in self.articles.articles)
+        return ArticleSet(
+            set(
+                ArticlesDB().get(id) for id in self.articles
+                )
+            )
     def isEquivalent(self, other):
         return (self.name.contains(other.name) or 
                 other.name.contains(self.name))

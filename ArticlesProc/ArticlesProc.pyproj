@@ -26,6 +26,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ArticlesProc.py" />
+    <Compile Include="Articles\ArticlesDB.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Articles\ArticleSetBuilder.py">
       <SubType>Code</SubType>
     </Compile>
@@ -71,6 +74,12 @@
     <Compile Include="StatsAndVisualization\visualizationUtils.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Themes\CitationGroup.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Themes\relations.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Utils\constants.py" />
     <Compile Include="Utils\nlpUtils.py">
       <SubType>Code</SubType>
@@ -109,6 +118,7 @@
     <Folder Include="Articles\" />
     <Folder Include="DevelopmentSets\" />
     <Folder Include="Citations\" />
+    <Folder Include="Themes\" />
     <Folder Include="StatsAndVisualization\" />
     <Folder Include="Utils\" />
     <Folder Include="People\" />
