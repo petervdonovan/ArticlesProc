@@ -32,6 +32,12 @@ class Article(object):
         #if id > Article.id + 1:
         #    print('skipping from', Article.id, 'to', id)
         Article.id = max(Article.id, id)
+    def addEquivalentArticle(self, equiv):
+        '''Store the id of an equivalent article.'''
+        if 'equivalentArticles' not in self.properties:
+            self.properties['equivalentArticles'] = [equiv.getId()]
+        else:
+            self.properties['equivalentArticles'].append(equiv.getId())
     def __str__(self):
         return (
             'Article #' + str(self.getId()) + ', published in ' + 
@@ -156,6 +162,7 @@ class Article(object):
                 else:
                     properties[prop] = self.properties[prop]
         self.properties = properties
+        self.addEquivalentArticle(other)
     def getSaveableData(self):
         return self.properties
     @classmethod

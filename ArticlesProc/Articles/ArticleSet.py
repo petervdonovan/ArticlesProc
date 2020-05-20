@@ -41,7 +41,9 @@ class ArticleSet(object):
                 if myArticle.isEquivalent(theirArticle):
                     myArticle.add(theirArticle)
                     found = True
-                    break
+                if theirArticle.isEquivalent(myArticle):
+                    theirArticle.add(myArticle)
+                    if found: break
             if not found:
                 articles.add(theirArticle)
         articles = articles.union(self.articles)
