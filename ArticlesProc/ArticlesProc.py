@@ -11,6 +11,10 @@ from DevelopmentSets.citationRecognitionMathSet701 import sampleMathCitations
 from People.ContributorsDB import ContributorsDB
 from People.Name import Name
 
+from Themes.CitationGroup import CitationGroup
+from Themes.AuthorshipGroup import AuthorshipGroup
+from Themes.ThemeGroupSet import ThemeGroupSet
+
 from Utils.timeUtils import getStringTimestamp
 from Utils.textProcUtils import capitalizeFirstLetterEachWord, escapeDoubleQuotes
 from StatsAndVisualization.statsUtils import showNormalTransformedQQ, findPowerOfMaxRmsNormality
@@ -76,7 +80,7 @@ def storeContributorDataFromArticles(articles, dbName):
     timesToEvaluateProperties = []    
     count = 1
     tstart = time.time()
-    virtualArticles = ArticleSet(set())
+    virtualArticles = set()
     for article in articles:
         print(count, "Article id", article.getId())
         count += 1
@@ -89,7 +93,7 @@ def storeContributorDataFromArticles(articles, dbName):
 
         lastTime=time.time()
         citedArticles = set(citation.getArticle() for citation in article.getCitations())
-        virtualArticles = virtualArticles + ArticleSet(citedArticles)
+        virtualArticles = virtualArticles.union(citedArticles)
         #article.recordCitations()
         if time.time() - lastTime > 0.5:
             print('Article at', article.getFullPath(), 'took over 0.5 seconds to record citations')
@@ -100,7 +104,7 @@ def storeContributorDataFromArticles(articles, dbName):
     print('Total time:', time.time() - tstart)
     # print("mean record contributors time: ", sum(timesToRecordContributors) / len(timesToRecordContributors))
     # print("mean evaluate properties time: ", sum(timesToEvaluateProperties) / len(timesToEvaluateProperties))
-    (ArticleSet(articles) + virtualArticles).pickleAllArticles(fileName=dbName+'_articles')
+    ArticleSet(articles.union(virtualArticles)).pickleAllArticles(fileName=dbName+'_articles')
     ContributorsDB().pickle(fileName=dbName+'_contributors')
 
 # storeContributorAndArticleDataFromXML('receipt-id-1423981-part-001 (biology)', 'biology_highmaxrecursion_full_db')
@@ -254,77 +258,109 @@ def repairContributors(inPicklePath, outPicklePath):
 #ArticlesDB().getFromPickle('math-pickles/math-articles-db_15-May-2020 (19_48)')
 #repairContributors('math-pickles/math_contributors_15-May-2020 (14_12)', 'math-pickles/math_contributors')
 
-ArticleSetBuilder().retrieveArticlesFromPickle('lit-pickles/literature_articles_19-May-2020 (00_15)')
-#ArticlesDB().getFromPickle('lit-pickles/lit-articles-db_18-May-2020 (21_23)')
-ls = list()
-for article in ArticlesDB.instance.db:
-    if article.getId() % 10 == 0:
-        ls.append(article.getId())
-    if len(ls) == 10:
-        print(ls)
-        ls = list()
+#ArticleSetBuilder().retrieveArticlesFromPickle('lit-pickles/literature_articles_19-May-2020 (23_30)')
+##ArticlesDB().getFromPickle('lit-pickles/lit-articles-db_18-May-2020 (21_23)')
+#ls = list()
+#for article in ArticlesDB.instance.db:
+#    if article.getId() % 10 == 0:
+#        ls.append(article.getId())
+#    if len(ls) == 10:
+#        print(ls)
+#        ls = list()
 #for article in ArticlesDB.instance.db:
 #    if not article.properties['contributors']:
 #        try:
 #            print(article.properties['citation'].raw)
 #        except KeyError:
 #            print('No contributors, no citation.')
-for id in range(47550, 47700):
-    print(id)
-    article = ArticlesDB().get(id)
-    print(article)
-    try:
-        print(article.properties)
-    except:
-        pass
-    try:
-        print(article.getFullPath())
-    except:
-        print('not real.')
-    try:
-        for citing in article.properties['articlesThatCiteThis']:
-            print(ArticlesDB().get(citing))
-            print(ArticlesDB().get(citing).properties)
-    except:
-        print('not cited.')
-    try:
-        for citing in article.properties['articlesThatThisCites']:
-            print(ArticlesDB().get(citing))
-            print(ArticlesDB().get(citing).properties)
-    except:
-        print('not citing.')
-    print()
-    print()
-print('________________________________________________________')
-print('________________________________________________________')
-print('________________________________________________________')
-length = len(ArticlesDB.instance.db)
-for id in range(length-150, 635600):
-    print(id)
-    article = ArticlesDB().get(id)
-    print(article)
-    try:
-        print(article.properties)
-    except:
-        pass
-    try:
-        print(article.getFullPath())
-    except:
-        print('not real.')
-    try:
-        for citing in article.properties['articlesThatCiteThis']:
-            print(ArticlesDB().get(citing))
-            print(ArticlesDB().get(citing).properties)
-    except:
-        print('not cited.')
-    try:
-        for citing in article.properties['articlesThatThisCites']:
-            print(ArticlesDB().get(citing))
-            print(ArticlesDB().get(citing).properties)
-    except:
-        print('not citing.')
-    print()
-    print()
+#for id in range(47550, 47700):
+#    print(id)
+#    article = ArticlesDB().get(id)
+#    print(article)
+#    try:
+#        print(article.properties)
+#    except:
+#        pass
+#    try:
+#        print(article.getFullPath())
+#    except:
+#        print('not real.')
+#    try:
+#        for citing in article.properties['articlesThatCiteThis']:
+#            print(ArticlesDB().get(citing))
+#            print(ArticlesDB().get(citing).properties)
+#    except:
+#        print('not cited.')
+#    try:
+#        for citing in article.properties['articlesThatThisCites']:
+#            print(ArticlesDB().get(citing))
+#            print(ArticlesDB().get(citing).properties)
+#    except:
+#        print('not citing.')
+#    print()
+#    print()
+#print('________________________________________________________')
+#print('________________________________________________________')
+#print('________________________________________________________')
+#length = len(ArticlesDB.instance.db)
+#for id in range(length-150, 635600):
+#    print(id)
+#    article = ArticlesDB().get(id)
+#    print(article)
+#    try:
+#        print(article.properties)
+#    except:
+#        pass
+#    try:
+#        print(article.getFullPath())
+#    except:
+#        print('not real.')
+#    try:
+#        for citing in article.properties['articlesThatCiteThis']:
+#            print(ArticlesDB().get(citing))
+#            print(ArticlesDB().get(citing).properties)
+#    except:
+#        print('not cited.')
+#    try:
+#        for citing in article.properties['articlesThatThisCites']:
+#            print(ArticlesDB().get(citing))
+#            print(ArticlesDB().get(citing).properties)
+#    except:
+#        print('not citing.')
+#    print()
+#    print()
 
 #storeDisciplineData('literature', 'lit-pickles')
 #ArticlesDB().pickle('lit-pickles/lit-articles-db')
+def load(articlesPath, contributorsPath):
+    '''Initialize the ArticlesDB from stored Article data 
+    (not actual Article objects) and initialize the 
+    ContributorsDB from the db file (list of Contributor 
+    objects)'''
+    # Clear the ArticlesDB
+    ArticlesDB().clear()
+    # Populate the ArticlesDB
+    ArticleSetBuilder().retrieveArticlesFromPickle(articlesPath)
+    # Clear the ContributorsDB
+    ContributorsDB().clear()
+    # Populate the ContibutorsDB
+    ContributorsDB().getFromPickle(contributorsPath)
+
+
+load('lit-pickles/literature_articles_19-May-2020 (23_30)', 'lit-pickles/literature_contributors_19-May-2020 (23_30)')
+ThemeGroupSet(AuthorshipGroup.setFactory()).pickle('lit-pickles/literature_theme_groups_authorship')
+
+#ArticlesDB().clear()
+#ContributorsDB().clear()
+#storeDisciplineData('math', 'math-pickles')
+#ArticlesDB().pickle('math-pickles/math-articles-db')
+
+#ArticlesDB().clear()
+#ContributorsDB().clear()
+#storeDisciplineData('sociology', 'soc-pickles')
+#ArticlesDB().pickle('soc-pickles/soc-articles-db')
+
+#ArticlesDB().clear()
+#ContributorsDB().clear()
+#storeDisciplineData('biology', 'bio-pickles')
+#ArticlesDB().pickle('bio-pickles/bio-articles-db')

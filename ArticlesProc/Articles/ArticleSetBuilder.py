@@ -69,6 +69,7 @@ class ArticleSetBuilder(object):
         for fileName in fileNames:
             dbfile = open(fileName, 'rb')
             db = pickle.load(dbfile)
+            dbfile.close()
             for articleRaw in db:
                 try:
                     self.articles.add(RealArticle.initFromRaw(articleRaw))

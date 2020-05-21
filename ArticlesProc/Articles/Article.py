@@ -2,6 +2,7 @@ from People.Contributor import sameContributor
 from People.ContributorsDB import ContributorsDB
 from People.Name import Name
 from Articles.ArticlesDB import ArticlesDB
+import time
 
 class Article(object):
     """Describes both real and virtual articles."""
@@ -75,11 +76,14 @@ class Article(object):
               other.contributorsAreSubsetOfOtherContributors(self)
     def isEquivalent(self, other):
         '''Checks if two articles are similar (and therefore should have same id)'''
+        startTime = time.time()
         if isinstance(other, Article):
             # If contributor names aren't known, then it won't be possible to 
             # know whether the articles are the equivalent, so it will be 
             # assumed that they are not equivalent.
             if not self.getContributorNames() or not other.getContributorNames():
+                if time.time() - startTime > 0.1:
+                    print("time to check for equivalence of articles:", time.time()-startTime)
                 return False
             # Check if contributor lists are consistent
             if self.getContributorNames() and other.getContributorNames() and (
@@ -92,6 +96,8 @@ class Article(object):
                     sameContributor(self.getPrimaryContributorName(), other.getPrimaryContributorName())
                 )
                 ):
+                if time.time() - startTime > 0.1:
+                    print("time to check for equivalence of articles:", time.time()-startTime)
                 return False
             # Check if publication years are consistent
             if (
@@ -99,7 +105,11 @@ class Article(object):
                 other.getPublicationYear() is not None and
                 self.getPublicationYear() != other.getPublicationYear()
                 ):
+                if time.time() - startTime > 0.1:
+                    print("time to check for equivalence of articles:", time.time()-startTime)
                 return False
+        if time.time() - startTime > 0.1:
+            print("time to check for equivalence of articles:", time.time()-startTime)
         return True
     def getEtAl(self):
         '''Returns whether there may be other Contributors not included in
@@ -132,6 +142,18 @@ class Article(object):
             if id == additionalArticle.getId():
                 return
         self.properties['articlesThatThisCites'].append(additionalArticle.getId())
+    def getArticlesThatCiteThis(self):
+        '''Gets the Articles that cite this Article.'''
+        try:
+            return set(ArticlesDB().get(id) for id in self.properties['articlesThatCiteThis'])
+        except KeyError:
+            return set()
+    def getArticlesThatThisCites(self):
+        '''Gets the Articles that this Article cites.'''
+        try:
+            return set(ArticlesDB().get(id) for id in self.properties['articlesThatThisCites'])
+        except KeyError:
+            return set()
     def getId(self):
         return self.properties['id']
     def setDiscipline(self, discipline):
@@ -145,6 +167,7 @@ class Article(object):
         '''Returns the combination of the contents of two Articles.
         TODO: REVIEW IMPLEMENTATION FOR EQUALITIES THAT ARE NOT RECOGNIZED AS 
         EQUALITIES AND FOR UNHANDLED DATA TYPES.'''
+        startTime = time.time()
         properties = dict()
         for prop in self.properties:
             if prop not in other.properties:
@@ -162,6 +185,8 @@ class Article(object):
                 else:
                     properties[prop] = self.properties[prop]
         self.properties = properties
+        if time.time() - startTime > 0.1:
+            print("time to add one article to another:", time.time() - startTime)
         self.addEquivalentArticle(other)
     def getSaveableData(self):
         return self.properties

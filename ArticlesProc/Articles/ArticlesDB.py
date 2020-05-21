@@ -27,3 +27,13 @@ class ArticlesDB:
     def clear(self):
         '''Clears away all articles stored in ArticlesDB.'''
         ArticlesDB.instance.clear()
+    def __iter__(self):
+        '''Initializes iteration over the articles in the DB.'''
+        self.selectedIdx = 0
+        return self
+    def __next__(self):
+        '''Returns the next item in iteration.'''
+        if self.selectedIdx == len(ArticlesDB.instance.db):
+            raise StopIteration
+        self.selectedIdx += 1
+        return ArticlesDB.instance.db[self.selectedIdx - 1]

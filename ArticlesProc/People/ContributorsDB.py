@@ -57,3 +57,12 @@ class ContributorsDB:
         '''Gets the Contributors database from a pickle file and 
         stores it in the singleton instance.'''
         ContributorsDB.instance.getFromPickle(fileName)
+    def clear(self):
+        '''Clears the ContributorsDB.'''
+        ContributorsDB.instance.clear()
+    def __iter__(self):
+        '''Initializes iteration over the ContributorsDB.'''
+        return iter(ContributorsDB.instance.db)
+    def size(self):
+        '''Returns the size of the DB.'''
+        return len(ContributorsDB.instance.db)

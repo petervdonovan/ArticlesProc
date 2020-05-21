@@ -388,6 +388,8 @@ class ArticleSet(object):
         #print(subsetTables)
         print("Done getting subsettables.")
         return subsetTables
+    def __iter__(self):
+        return iter(self.articles)
 
 def getDictionaryWithNumbersAsKeys(meaningfulKeysDict):
     '''Returns a dictionary that is a copy of the dictionary passed,

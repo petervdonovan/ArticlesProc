@@ -74,10 +74,19 @@
     <Compile Include="StatsAndVisualization\visualizationUtils.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Themes\AuthorshipGroup.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Themes\CitationGroup.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Themes\relations.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemeGroup.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemeGroupSet.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils\constants.py" />
