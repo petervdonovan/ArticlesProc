@@ -1,5 +1,6 @@
 from Themes.ThemeGroup import ThemeGroup
 from Utils.timeUtils import getStringTimestamp
+import pickle
 
 class ThemeGroupSet(object):
     """A set of ThemeGroups."""

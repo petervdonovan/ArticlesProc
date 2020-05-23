@@ -19,7 +19,8 @@ class ThemeGroup(object):
             if nonIntersecting:
                 if classRepresentative in ThemeGroup.alreadyGrouped:
                     raise AlreadyGroupedException
-            self.contributors = getRelatedContributorsFunction(classRepresentative)
+            self.contributors = set()
+            getRelatedContributorsFunction(self, classRepresentative)
             self.articles = set(
                 article
                 for contributor in self.contributors
@@ -35,9 +36,7 @@ class ThemeGroup(object):
     def getPicklable(self):
         '''Returns a tuple with names and ids, not 
         Article or Contributor objects.'''
-        contributorNames = set(
-            contributor.getName() for contributor in self.contributors
-            )
+        contributorNames = set(contributor.name for contributor in self.contributors)
         articleIds = set(article.getId() for article in self.articles)
         return (contributorNames, articleIds)
     @classmethod
@@ -64,34 +63,34 @@ class ThemeGroup(object):
         # Gather the data
         citationGroups = set()
         for contributor in ContributorsDB():
-            if contributorCount > 0 and contributorCount % 10 == 0:
+            if contributorCount % 5 == 0:
                 print(
-                    'Contributor #{} of {} ({}% complete), with {} groups created. Elapsed time {} seconds.'
+                    'Contributor #{} of {} ({}% complete), with {} groups created and {} Contributors grouped. Elapsed time {} seconds.'
                     .format(
                         contributorCount,
                         numContributors,
                         round(contributorCount / numContributors * 100),
                         groupsCount,
+                        len(ThemeGroup.alreadyGrouped),
                         time.time() - startTime
                     )
                 )
             try:
                 group = cls(contributor) # throws AlreadyGroupedException
+                print("adding ThemeGroup...")
                 citationGroups.add(group) # this is the important part
+                print("Group with {} contributors added to the citationGroups".format(len(group.contributors)))
                 # The rest is progress monitoring
                 articleCounts.append(group.getArticlesCount())
                 contributorCounts.append(group.getContributorsCount())
                 groupsCount += 1
             except AlreadyGroupedException:
-                pass
+                print("alreadyGrouped...")
             contributorCount += 1
-        try:
-            plt.hist(contributorCounts)
-            plt.show()
-            plt.hist(articleCounts)
-            plt.show()
-            plt.scatter(contributorCounts, articleCounts)
-            plt.show()
-        except:
-            print("creating diagrams failed.")
+        plt.hist(contributorCounts)
+        plt.show()
+        plt.hist(articleCounts)
+        plt.show()
+        plt.scatter(contributorCounts, articleCounts)
+        plt.show()
         return citationGroups

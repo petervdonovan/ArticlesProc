@@ -2,6 +2,7 @@ from Citations.Citation import Citation
 from Articles.ArticleSet import ArticleSet, getGranularStatisticalSummariesOfSetsDict, chartDifferencesInSubsetMeans
 from Articles.ArticleSetBuilder import ArticleSetBuilder, getSummaryFromPickle, getSummaryAndPickleFromXML
 from Articles.ArticlesDB import ArticlesDB
+from Articles.RealArticle import RealArticle
 
 from DevelopmentSets.citationRecognitionLiteratureSet681 import sampleLiteratureCitations
 from DevelopmentSets.citationRecognitionBiologySet981 import sampleBiologyCitations
@@ -27,6 +28,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import time
+
+import sys
+sys.setrecursionlimit(10**6)
 
 
 #           Activate the environment
@@ -128,10 +132,10 @@ def getSeriesOfMetric(pickleFileName, *metrics):
         return results[0]
     return results
 
-def getNormalTransformationFunction(pickleFileName, metric):
+def getNormalTransformationFunction(series):
     '''Returns a function that would transform the data to make it
     resemble a Gaussian distribution.'''
-    series = getSeriesOfMetric(pickleFileName, metric)
+    #series = getSeriesOfMetric(pickleFileName, metric)
     power = findPowerOfMaxRmsNormality(series)
     print('Power found:', power)
     if power == 0: return math.log
@@ -346,9 +350,27 @@ def load(articlesPath, contributorsPath):
     # Populate the ContibutorsDB
     ContributorsDB().getFromPickle(contributorsPath)
 
+def showArticleAndCitationNumberDistribution():
+    '''Shows the frequency distribution of articles and citations per Contributor.'''
+    load('lit-pickles/literature_articles_19-May-2020 (23_30)', 'lit-pickles/literature_contributors_19-May-2020 (23_30)')
+    plt.hist([
+        len([
+            article
+            for article in contributor.getArticles()
+            if isinstance(article, RealArticle)
+            ])
+        for contributor in ContributorsDB()
+        ], bins=100)
+    plt.show()
+    plt.hist([
+        sum([
+            len(article.getArticlesThatCiteThis())
+            for article in contributor.getArticles()
+            ])
+        for contributor in ContributorsDB()
+        ], bins=99, range=(2, 100))
+    plt.show()
 
-load('lit-pickles/literature_articles_19-May-2020 (23_30)', 'lit-pickles/literature_contributors_19-May-2020 (23_30)')
-ThemeGroupSet(AuthorshipGroup.setFactory()).pickle('lit-pickles/literature_theme_groups_authorship')
 
 #ArticlesDB().clear()
 #ContributorsDB().clear()
@@ -357,10 +379,27 @@ ThemeGroupSet(AuthorshipGroup.setFactory()).pickle('lit-pickles/literature_theme
 
 #ArticlesDB().clear()
 #ContributorsDB().clear()
-#storeDisciplineData('sociology', 'soc-pickles')
-#ArticlesDB().pickle('soc-pickles/soc-articles-db')
+#storeDisciplineData('biology', 'bio-pickles')
+#ArticlesDB().pickle('bio-pickles/bio-articles-db')
 
 #ArticlesDB().clear()
 #ContributorsDB().clear()
-#storeDisciplineData('biology', 'bio-pickles')
-#ArticlesDB().pickle('bio-pickles/bio-articles-db')
+#storeDisciplineData('sociology', 'soc-pickles')
+#ArticlesDB().pickle('soc-pickles/soc-articles-db')
+
+load('lit-pickles/literature_articles_19-May-2020 (23_30)', 'lit-pickles/literature_contributors_19-May-2020 (23_30)')
+ThemeGroupSet(CitationGroup.setFactory()).pickle('lit-pickles/literature_theme_groups_citation')
+
+load('lit-pickles/literature_articles_19-may-2020 (23_30)', 'lit-pickles/literature_contributors_19-may-2020 (23_30)')
+ThemeGroupSet(AuthorshipGroup.setFactory()).pickle('lit-pickles/literature_theme_groups_authorship')
+
+#load('lit-pickles/literature_articles_19-May-2020 (23_30)', 'lit-pickles/literature_contributors_19-May-2020 (23_30)')
+#getNormalTransformationFunction([
+#        sum([
+#            len(article.getArticlesThatCiteThis())
+#            for article in contributor.getArticles()
+#            ])
+#        for contributor in ContributorsDB()
+#        ])
+
+#showArticleAndCitationNumberDistribution()
